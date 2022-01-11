@@ -1,0 +1,21 @@
+{
+  "task" : [{
+    "type" : 1,
+    "deadline" : 100,
+    "percentage" : 10,
+    "inputSize" : 1000,
+    "outputSize" : 500,
+    "generationRate" : 2,
+    "activePeriod" : 40,
+    "idlePeriod" : 20
+  },{
+    "type" : 2,
+    "deadline" : 100,
+    "percentage" : 10,
+    "inputSize" : 1000,
+    "outputSize" : 500,
+    "generationRate" : 2,
+    "activePeriod" : 40,
+    "idlePeriod" : 20
+  }]
+}
