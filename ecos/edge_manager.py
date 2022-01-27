@@ -5,13 +5,12 @@ from event import Event
 
 # 22.01.05
 class EdgeManager:
-    def __init__(self, edge_props, simulator, orchestrate=None):
+    def __init__(self, edge_props, orchestrate=None):
         self.edge_id = 0
         self.edge_list = list()
         self.edge_props = edge_props
         self.orchestrate_policy = orchestrate
         self.simSetting = Sim_setting()
-        self.simulator = simulator
 
     def create_edge_server(self):
         for i in self.edge_props.length:

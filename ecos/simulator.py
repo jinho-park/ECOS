@@ -10,12 +10,9 @@ class Simulator:
             cls._instance = Simulator()
         return cls._instance
 
-    def __init__(self, _terminateTime,
-                 _sim_scenario,
-                 _orchestrator_policy,
-                 _scenario_factory,
-                 _num_device):
+    def __init__(self):
         self.taskQueue = list()
+        self.terminate_time = 0
         self.eventTag = Enum("send",
                              "create",
                              "processing",
@@ -25,15 +22,28 @@ class Simulator:
         self.entity_state = Enum("FINISHED", "RUNNABLE")
         self.running = False
         self.clock = 0
-        self.terminateTime = _terminateTime
         self.abruptTerminate = False
+        self.sim_scenario = None
+        self.orchestrator_policy = None
+        self.scenario_factory = None
+        self.num_device = 0
+        self.entities = None
+
+    def initialize(self, _terminate_time,
+                   _sim_scenario):
+        self.terminate_time = _terminate_time
         self.sim_scenario = _sim_scenario
-        self.orchestrator_policy = _orchestrator_policy
+
+        return True
+
+    def set_simulation_factory(self, _scenario_factory):
         self.scenario_factory = _scenario_factory
-        self.num_device = _num_device
         self.entities = [_scenario_factory.edgeserver_manager(),
                          _scenario_factory.cloudserver_manager(),
                          _scenario_factory.mobileserver_manager()]
+
+    def set_mobile_device(self, _num_device):
+        self.num_device = _num_device
 
     def start_simulator(self):
         #

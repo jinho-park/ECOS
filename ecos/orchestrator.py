@@ -7,7 +7,7 @@ class Orchestrator:
         self.sim_setting = Sim_setting.get_instance()
         self.policy = _policy
 
-    def offloaindg_target(self, task):
+    def offloading_target(self, task):
         collaboration_target = 0
         location = self.simulation.get_mobility.get_location(self.simulation.get_clock(), task)
 

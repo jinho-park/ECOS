@@ -9,6 +9,6 @@
     "wan" : 100,
     "lan" : 0
   },
-  "orchestration_policy" : "RANDOM",
+  "orchestration_policy" : ["RANDOM"],
   "simul_scenario" : "EDGE_ORCHEST"
 }

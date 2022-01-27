@@ -7,13 +7,12 @@ from sim_setting import Sim_setting
 from event import Event
 
 class DeviceManager:
-    def __init__(self, device_props, simulator, orchestrate=None):
+    def __init__(self, device_props, orchestrate=None):
         self.device_list = list()
         self.device_props = device_props
         self.orchestrate_policy = orchestrate
         self.taskID = 0
         self.simSetting = Sim_setting()
-        self.simulator = simulator
         self.connectEdge = -1
 
         if self.orchestrate_policy is None:
