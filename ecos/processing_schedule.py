@@ -1,6 +1,6 @@
 import sys
 
-from simulator import Simulator
+from ecos.simulator import Simulator
 
 # 22.01.10
 # Time share based algorithm

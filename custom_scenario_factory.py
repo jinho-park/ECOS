@@ -1,7 +1,7 @@
-from ecos.scenario_factory import Scenario_factory
+from ecos import scenario_factory
 
 
-class Custom_scenario_factory(metaclass=Scenario_factory):
+class Custom_scenario_factory(scenario_factory.Scenario_factory):
     def __init__(self, _device_manager,
                  _edge_manager,
                  _cloud_manager,
@@ -11,15 +11,15 @@ class Custom_scenario_factory(metaclass=Scenario_factory):
         self.cloud_manager = _cloud_manager
         self.orchestrator = _orchestrator
 
-    @Scenario_factory
+    @scenario_factory.Scenario_factory.get_device_manager
     def get_device_manager(self):
         return self.device_manager
 
-    @Scenario_factory
+    @scenario_factory.Scenario_factory.get_edge_manager
     def get_edge_manager(self):
         return self.edge_manager
 
-    @Scenario_factory
+    @scenario_factory.Scenario_factory.get_cloud_manager
     def get_cloud_manager(self):
         return self.cloud_manager
 

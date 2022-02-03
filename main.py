@@ -1,14 +1,15 @@
 import json
-from ecos.simulator import Simulator
-from ecos.orchestrator import Orchestrator
-from ecos.edge_manager import EdgeManager
-from ecos.device_manager import DeviceManager
+from ecos import simulator
+from ecos import orchestrator
+from ecos import EdgeManager
+from ecos import DeviceManager
+from ecos import CloudManager
 from custom_scenario_factory import Custom_scenario_factory
 
 def main():
-    configure = "/src/config.json"
-    device = "/src/device.json"
-    app = "/src/device.json"
+    configure = "./src/config.json"
+    device = "./src/device.json"
+    app = "./src/device.json"
 
     with open(configure, 'r') as f:
         configure_data = json.load(f)
@@ -19,17 +20,17 @@ def main():
     with open(app, 'r') as f:
         app_data = json.load(f)
 
-    simul = Simulator.get_instance()
+    simul = simulator.Simulator().get_instance()
     simul.initialize(configure_data['simulation_time'], configure_data['simul_scenario'])
 
     for mobile_device in range(int(configure_data["min_num_of_mobile_device"]),
                                int(configure_data["max_num_of_mobile_device"]),
                                int(configure_data["mobile_device_counter"])):
-        for policy in range(configure_data["orchestration_policy"]):
-            deviceManager = DeviceManager(device_data["mobile"])
+        for policy in configure_data["orchestration_policy"]:
+            deviceManager = DeviceManager(device_data["mobile"], mobile_device)
             edgeManager = EdgeManager(device_data["edge"])
-            cloudManager =
-            orchestrator = Orchestrator(policy)
+            cloudManager = CloudManager(device_data["cloud"])
+            orchestrator = orchestrator.Orchestrator(policy)
             scenario_factory = Custom_scenario_factory(deviceManager,
                                                        edgeManager,
                                                        cloudManager,

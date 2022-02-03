@@ -1,5 +1,6 @@
-from simulator import Simulator
-from sim_setting import Sim_setting
+from ecos.simulator import Simulator
+from ecos.sim_setting import Sim_setting
+
 
 class Orchestrator:
     def __init__(self, _policy):
@@ -8,10 +9,10 @@ class Orchestrator:
         self.policy = _policy
 
     def offloading_target(self, task):
-        collaboration_target = 0
+        collaborationTarget = 0
         location = self.simulation.get_mobility.get_location(self.simulation.get_clock(), task)
 
-        if self.policy is "asdf":
-            collaboration_target = 1
+        if self.policy == "asdf":
+            collaborationTarget = 1
 
-        return collaboration_target
+        return collaborationTarget

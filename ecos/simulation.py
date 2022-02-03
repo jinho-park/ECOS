@@ -23,8 +23,8 @@ class Simulation:
                  cloud_manager,
                  device_mobility,
                  task_generator,
-                 topology=Topology(),
-                 device_manager=DeviceManager()):
+                 device_manager,
+                 topology=Topology()):
         self.env = simpy.Environment()
         self.ev_buf = list()
         self.stop = False

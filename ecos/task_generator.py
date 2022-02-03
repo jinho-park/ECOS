@@ -1,6 +1,6 @@
 import random
 import numpy as np
-import task
+from ecos.task import Task
 
 # 21.11.17
 class Task_generator:

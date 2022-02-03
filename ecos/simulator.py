@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 # 2022.01.07
 class Simulator:
     _instance = None
@@ -13,12 +14,7 @@ class Simulator:
     def __init__(self):
         self.taskQueue = list()
         self.terminate_time = 0
-        self.eventTag = Enum("send",
-                             "create",
-                             "processing",
-                             "transmission",
-                             "progress",
-                             "stop")
+        self.eventTag = self.my_enum('send', 'create', 'processing', "transmission", "progress", "stop")
         self.entity_state = Enum("FINISHED", "RUNNABLE")
         self.running = False
         self.clock = 0
@@ -167,3 +163,7 @@ class Simulator:
 
     def get_clock(self):
         return self.clock
+
+    def my_enum(*sequential, **named):
+        enums = dict(zip(sequential, range(len(sequential))), **named)
+        return type('Enum', (), enums)

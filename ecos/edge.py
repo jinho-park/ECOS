@@ -22,7 +22,7 @@ class Edge:
         else:
             self.waiting_list.append(task)
 
-    def task_processing(self, simulationTime):
+    def update_task_state(self, simulationTime):
         timeSpen = simulationTime - self.previous_time
 
         for task in self.exec_list:

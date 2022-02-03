@@ -1,6 +1,7 @@
 import json
 from enum import Enum
 
+
 # 22.01.05
 class Sim_setting:
     _instance = None
@@ -13,10 +14,18 @@ class Sim_setting:
         return cls._instance
 
     def __init__(self):
-        self.nodeId = Enum("Mobile", "Edge", "Cloud")
+        self.nodeId = {
+            "Mobile" : 1,
+            "Edge": 2,
+            "Cloud" : 3
+        }
 
         # WLAN : device-edge, MAN : edge-edge, WAN : edge-cloud
-        self.networkType = Enum("WLAN", "MAN", "WAN")
+        self.networkType = {
+            "WLAN" : 1,
+            "MAN" : 2,
+            "WAN" : 3
+        }
         self.simulationTime = 0
         self.warmUpPeriod = 0
         self.intervalToGetLoadLog = 0

@@ -1,7 +1,8 @@
-from task import Task
-from sim_setting import Sim_setting
-from edge import Edge
-from event import Event
+from ecos.task import Task
+from ecos.sim_setting import Sim_setting
+from ecos.edge import Edge
+from ecos.event import Event
+from ecos.simulator import Simulator
 
 # 22.01.05
 class EdgeManager:
@@ -31,6 +32,7 @@ class EdgeManager:
     def receive_task_from_device(self, event):
         msg = event.get_message()
         dest = self.orchestrate_policy.get_target(event.get_task())
+        simul = Simulator.get_instance()
         msg["detail"]["dest"]["id"] = 1
 
         # calculate network delay
@@ -41,4 +43,4 @@ class EdgeManager:
 
         evt = Event(msg, event.get_task())
 
-        self.simulator.send_event(evt)
+        simul.send_event(evt)

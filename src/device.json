@@ -5,10 +5,12 @@
   "edge" : [
     {
       "id" : 0,
-      "mips" : 40000
+      "mips" : 40000,
+      "percentage" : 20
     },{
       "id" : 1,
-      "mips" : 40000
+      "mips" : 40000,
+      "percentage" : 80
     }
   ],
   "mobile" : {

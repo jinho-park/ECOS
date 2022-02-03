@@ -1,15 +1,16 @@
 import random
-
 from ecos.task_generator import Task_generator
 from ecos.task import Task
 from ecos.device import Device
-from sim_setting import Sim_setting
-from event import Event
+from ecos.sim_setting import Sim_setting
+from ecos.event import Event
+
 
 class DeviceManager:
-    def __init__(self, device_props, orchestrate=None):
+    def __init__(self, device_props, num_device, orchestrate=None):
         self.device_list = list()
         self.device_props = device_props
+        self.num_device = num_device
         self.orchestrate_policy = orchestrate
         self.taskID = 0
         self.simSetting = Sim_setting()
@@ -21,23 +22,23 @@ class DeviceManager:
             self.create_device_with_policy()
 
     def create_device_with_policy(self):
-        for i in self.device_props.length:
+        for i in range(self.num_device):
             device = Device(self.device_props[i], self.orchestrate_policy)
             self.device_list.append(device)
 
         self.set_connect_edge()
 
     def create_device_without_policy(self):
-        for i in self.device_props.length:
-            device = Device(self.device_props[i])
+        for i in range(self.num_device):
+            device = Device(i, self.device_props["mips"])
             self.device_list.append(device)
 
         self.set_connect_edge()
 
     def set_connect_edge(self):
-        for i in range(self.device_props.length):
+        for i in range(self.num_device):
             randomConnectEdge = -1
-            edgeSelector = random.random(0, 100)
+            edgeSelector = random.randrange(0, 100)
             edgePercentage = 0
 
             for j in self.device_props[i]:
