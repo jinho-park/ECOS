@@ -4,6 +4,7 @@ from ecos.edge import Edge
 from ecos.event import Event
 from ecos.simulator import Simulator
 
+
 # 22.01.05
 class EdgeManager:
     def __init__(self, edge_props, orchestrate=None):
@@ -12,6 +13,23 @@ class EdgeManager:
         self.edge_props = edge_props
         self.orchestrate_policy = orchestrate
         self.simSetting = Sim_setting()
+        # 1 : FINISHED, 2 : RUNNABLE
+        self.state = 1
+
+    def get_state(self):
+        return self.state
+
+    def run(self):
+        if self.state == 1:
+            self.state = 2
+
+        return True
+
+    def shutdown_entity(self):
+        if self.state == 2:
+            self.state = 1
+
+        return True
 
     def create_edge_server(self):
         for i in self.edge_props.length:

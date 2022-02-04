@@ -7,14 +7,17 @@ from ecos.event import Event
 
 
 class DeviceManager:
-    def __init__(self, device_props, num_device, orchestrate=None):
+    def __init__(self, device_props, num_device, edge_props, orchestrate=None):
         self.device_list = list()
         self.device_props = device_props
+        self.edge_props = edge_props
         self.num_device = num_device
         self.orchestrate_policy = orchestrate
         self.taskID = 0
         self.simSetting = Sim_setting()
         self.connectEdge = -1
+        # 1 : FINISHED, 2 : RUNNABLE
+        self.state = 1
 
         if self.orchestrate_policy is None:
             self.create_device_without_policy()
@@ -35,14 +38,29 @@ class DeviceManager:
 
         self.set_connect_edge()
 
+    def get_state(self):
+        return self.state
+
+    def run(self):
+        if self.state == 1:
+            self.state = 2
+
+        return True
+
+    def shutdown_entity(self):
+        if self.state == 2:
+            self.state = 1
+
+        return True
+
     def set_connect_edge(self):
         for i in range(self.num_device):
             randomConnectEdge = -1
             edgeSelector = random.randrange(0, 100)
             edgePercentage = 0
 
-            for j in self.device_props[i]:
-                edgePercentage += j['percentage']
+            for j in self.edge_props:
+                edgePercentage += int(j['percentage'])
 
                 if edgeSelector <= edgePercentage:
                     randomConnectEdge = i

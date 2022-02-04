@@ -34,9 +34,9 @@ class Simulator:
 
     def set_simulation_factory(self, _scenario_factory):
         self.scenario_factory = _scenario_factory
-        self.entities = [_scenario_factory.edgeserver_manager(),
-                         _scenario_factory.cloudserver_manager(),
-                         _scenario_factory.mobileserver_manager()]
+        self.entities = [_scenario_factory.get_edge_manager(),
+                         _scenario_factory.get_cloud_manager(),
+                         _scenario_factory.get_device_manager()]
 
     def set_mobile_device(self, _num_device):
         self.num_device = _num_device
@@ -61,7 +61,7 @@ class Simulator:
                 self.clock = self.terminateTime
                 break
 
-        clock = self.clock()
+        clock = self.clock
 
         self.finish_simulation()
         self.run_stop()
@@ -83,7 +83,7 @@ class Simulator:
 
     def run_clock_tick(self):
         #
-        entities_size = self.entities.size()
+        entities_size = len(self.entities)
         queue_empty = False
 
         for item in self.entities:

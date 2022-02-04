@@ -5,11 +5,28 @@ from ecos.simulator import Simulator
 class CloudManager:
     def __init__(self, cloud_props, time):
         self.cloud_props = cloud_props
-        self.MIPS = cloud_props["MIPS"]
+        self.MIPS = cloud_props["mips"]
         self.processingTaskList = list()
         self.bufferedTaskList = list()
         self.finishTaskList = list()
         self.previousTime = time
+        # 1 : FINISHED, 2 : RUNNABLE
+        self.state = 1
+
+    def get_state(self):
+        return self.state
+
+    def run(self):
+        if self.state == 1:
+            self.state = 2
+
+        return True
+
+    def shutdown_entity(self):
+        if self.state == 2:
+            self.state = 1
+
+        return True
 
     def create_cloud_server(self):
         #
