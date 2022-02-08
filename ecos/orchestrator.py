@@ -11,6 +11,8 @@ class Orchestrator:
         location = self.simulation.get_mobility.get_location(self.simulation.get_clock(), task)
 
         if self.policy == "RANDOM":
+            print("1")
             collaborationTarget = 1
+
 
         return collaborationTarget
