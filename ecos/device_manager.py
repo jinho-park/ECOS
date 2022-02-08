@@ -1,8 +1,6 @@
 import random
-from ecos.task_generator import Task_generator
 from ecos.task import Task
 from ecos.device import Device
-from ecos.sim_setting import Sim_setting
 from ecos.event import Event
 
 
@@ -14,7 +12,6 @@ class DeviceManager:
         self.num_device = num_device
         self.orchestrate_policy = orchestrate
         self.taskID = 0
-        self.simSetting = Sim_setting()
         self.connectEdge = -1
         # 1 : FINISHED, 2 : RUNNABLE
         self.state = 1

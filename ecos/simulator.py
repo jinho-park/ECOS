@@ -1,3 +1,4 @@
+import json
 from enum import Enum
 
 
@@ -14,21 +15,48 @@ class Simulator:
     def __init__(self):
         self.taskQueue = list()
         self.terminate_time = 0
+
+        # type configuration
         self.eventTag = self.my_enum('send', 'create', 'processing', "transmission", "progress", "stop")
+        self.node_type = self.my_enum("Mobile", "Edge", "Cloud")
+        self.network_type = self.my_enum("WLAN", "MAN", "WAN")
         self.entity_state = Enum("FINISHED", "RUNNABLE")
+
+        # simulation set
         self.running = False
         self.clock = 0
+        self.warmUpPeriod = 0
+        self.intervalToGetLoadLog = 0
         self.abruptTerminate = False
         self.sim_scenario = None
         self.orchestrator_policy = None
         self.scenario_factory = None
-        self.num_device = 0
         self.entities = None
+        self.file_log_enable = True
 
-    def initialize(self, _terminate_time,
-                   _sim_scenario):
-        self.terminate_time = _terminate_time
-        self.sim_scenario = _sim_scenario
+        # network setting
+        self.network_properties = None
+
+        # number of computing node setting
+        self.minNumOfMobileDevice = 0
+        self.maxNumOfMobileDevice = 0
+        self.mobileDeviceCounterSize = 0
+        self.numOfEdge = 0
+        self.num_device = 0
+
+        # task configuration
+        self.task_look_up_table = list()
+
+    def initialize(self, configure, _network, _app, _num_of_edge):
+        self.terminate_time = int(configure["simulation_time"])
+        self.orchestrator_policy = configure["orchestration_policy"]
+        self.minNumOfMobileDevice = int(configure["min_num_of_mobile_device"])
+        self.maxNumOfMobileDevice = int(configure["max_num_of_mobile_device"])
+        self.mobileDeviceCounterSize = int(configure["mobile_device_counter"])
+        self.sim_scenario = configure["simul_scenario"]
+        self.numOfEdge = _num_of_edge
+        self.network_properties = _network
+        self.task_look_up_table = _app
 
         return True
 
@@ -40,6 +68,36 @@ class Simulator:
 
     def set_mobile_device(self, _num_device):
         self.num_device = _num_device
+
+    def get_warmup_period(self):
+        return self.warmUpPeriod
+
+    def get_load_log_interval(self):
+        return self.intervalToGetLoadLog
+
+    def get_file_log_enable(self):
+        return self.file_log_enable
+
+    def get_network_properties(self):
+        return self.network_properties
+
+    def get_min_num_of_mobile_device(self):
+        return self.minNumOfMobileDevice
+
+    def get_max_num_of_mobile_device(self):
+        return self.maxNumOfMobileDevice
+
+    def get_num_of_mobile_device(self):
+        return self.num_device
+
+    def get_num_of_edge(self):
+        return self.numOfEdge
+
+    def get_simulation_scenario(self):
+        return self.sim_scenario
+
+    def get_clock(self):
+        return self.clock
 
     def start_simulator(self):
         #
@@ -56,9 +114,9 @@ class Simulator:
             if self.run_clock_tick() or self.abruptTerminate:
                 break
 
-            if self.clock >= self.terminateTime and self.terminateTime > 0.0:
-                self.stop_simulator()
-                self.clock = self.terminateTime
+            if self.clock >= self.terminate_time and self.terminate_time > 0.0:
+                self.run_stop()
+                self.clock = self.terminate_time
                 break
 
         clock = self.clock
@@ -161,9 +219,11 @@ class Simulator:
         #
         self.taskQueue.append(event)
 
-    def get_clock(self):
-        return self.clock
-
     def my_enum(*sequential, **named):
         enums = dict(zip(sequential, range(len(sequential))), **named)
         return type('Enum', (), enums)
+
+    def parse_json_file(self, file):
+        json_file = json.dumps(file, indent=4)
+
+        return json_file

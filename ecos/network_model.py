@@ -1,4 +1,4 @@
-from ecos.sim_setting import Sim_setting
+from ecos.simulator import Simulator
 
 #MM1Queue based network model
 class Network_model:
@@ -12,7 +12,7 @@ class Network_model:
 
         num_of_task_type = 0
 
-        task_lookup_table = Sim_setting.get_instance().get_task_look_up_table()
+        task_lookup_table = Simulator.get_instance().get_task_look_up_table()
 
         for i in len(task_lookup_table):
             weight = task_lookup_table[i]/100
@@ -32,7 +32,7 @@ class Network_model:
     def get_download_delay(self, task):
         self.num_send_task += 1
 
-        sim_setting = Sim_setting.get_instance()
+        sim_setting = Simulator.get_instance()
 
         if self.net_type == 0:
             return self.calculate_MM1(sim_setting.get_wlan_propagation_delay(),

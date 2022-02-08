@@ -3,12 +3,6 @@
   "min_num_of_mobile_device" : 100,
   "max_num_of_mobile_device" : 1000,
   "mobile_device_counter" : 100,
-  "network_bandwidth" : {
-    "gsm" : 0,
-    "man" : 0,
-    "wan" : 100,
-    "lan" : 0
-  },
   "orchestration_policy" : ["RANDOM"],
   "simul_scenario" : "EDGE_ORCHEST"
 }

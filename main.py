@@ -10,6 +10,7 @@ def main():
     configure = "./src/config.json"
     device = "./src/device.json"
     app = "./src/device.json"
+    net = "./src/network.json"
 
     with open(configure, 'r') as f:
         configure_data = json.load(f)
@@ -20,8 +21,13 @@ def main():
     with open(app, 'r') as f:
         app_data = json.load(f)
 
+    with open(net, 'r') as f:
+        net_data = json.load(f)
+
     simul = Simulator.get_instance()
-    simul.initialize(configure_data['simulation_time'], configure_data['simul_scenario'])
+    if simul.initialize(configure_data, net_data, app_data, len(device_data["edge"])) == False:
+        print("Initialization Error")
+        exit(1)
 
     for mobile_device in range(int(configure_data["min_num_of_mobile_device"]),
                                int(configure_data["max_num_of_mobile_device"]),
@@ -37,10 +43,6 @@ def main():
             simul.set_simulation_factory(scenario_factory)
             print("Start simulator")
             simul.start_simulator()
-
-    if simul.initialize() is False:
-        print("Simulator initialization error!")
-        exit(1)
 
 if __name__ == '__main__':
     main()

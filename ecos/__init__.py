@@ -9,7 +9,6 @@ from ecos.log import Log
 from ecos.orchestrator import Orchestrator
 from ecos.processing_schedule import Process_schedule
 from ecos.scenario_factory import Scenario_factory
-from ecos.sim_setting import Sim_setting
 from ecos.simulation import Simulation
 from ecos.simulator import Simulator
 from ecos.task import Task

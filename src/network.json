@@ -1,0 +1,24 @@
+{
+  "topology": [
+    {
+      "source": 1,
+      "dest": 2,
+      "bandwidth": 100,
+      "propagation": 10,
+      "_source_comment_": "source means source computing node ID",
+      "_dest_comment_": "dest means destination computing node ID",
+      "_bandwidth_comment_": "link bandwidth and metric is kbps",
+      "_propagation_comment_": "link propagation and metric is ms"
+    },{
+      "source": 1,
+      "dest": 3,
+      "bandwidth": 100,
+      "propagation": 10
+    },{
+      "source": 2,
+      "dest": 3,
+      "bandwidth": 100,
+      "propagation": 10
+    }
+  ]
+}

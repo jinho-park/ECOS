@@ -13,10 +13,18 @@ class Log:
 
     def __init__(self):
         # 0: Mobile, 1: Edge, 2: Cloud
-        self.device_type = 0
+        self.device_type = {
+            "Mobile": 0,
+            "Edge": 1,
+            "Cloud": 2
+        }
         # lan: mobile-edge, man: edge-edge, wan: edge-cloud
         # 0: gsm, 1: wan, 2: man, 3: lan
-        self.network_type = 0
+        self.network_type = {
+            "lan": 1,
+            "man": 2,
+            "wan": 3
+        }
         self.file_enable = True
         self.file_name = ""
         self.folder_path = ""

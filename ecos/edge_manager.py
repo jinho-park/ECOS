@@ -1,5 +1,3 @@
-from ecos.task import Task
-from ecos.sim_setting import Sim_setting
 from ecos.edge import Edge
 from ecos.event import Event
 from ecos.simulator import Simulator
@@ -12,7 +10,6 @@ class EdgeManager:
         self.edge_list = list()
         self.edge_props = edge_props
         self.orchestrate_policy = orchestrate
-        self.simSetting = Sim_setting()
         # 1 : FINISHED, 2 : RUNNABLE
         self.state = 1
 
