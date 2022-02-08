@@ -17,8 +17,11 @@ class Task:
         # 0 = mobile, 1 = edge, 2 = cloud
         self.buffering_time = [0, 0, 0]
         self.processing_time = [0, 0, 0]
+        # lan: mobile-edge, man: edge-edge, wan: edge-cloud
         # 0= gsm, 1=wan, 2=man, 3=lan
         self.network_delay = [0, 0, 0, 0]
+        self.finish_node = 0
+        self.allocated_resource = 0
 
     def create_task(self):
         self.task_birth_time = time.time()
@@ -74,3 +77,18 @@ class Task:
 
     def get_network_delay(self, type):
         return self.network_delay[type]
+
+    def get_task_deadline(self):
+        return self.task_deadline
+
+    def set_finish_node(self, type):
+        self.finish_node = type
+
+    def get_finish_node(self):
+        return self.finish_node
+
+    def set_allocated_resource(self, resource):
+        self.allocated_resource = resource
+
+    def get_allocated_resource(self):
+        return self.allocated_resource

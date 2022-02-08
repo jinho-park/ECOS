@@ -54,7 +54,7 @@ class CloudManager:
     def update_task_state(self, simulationTime):
         timeSpen = simulationTime - self.previousTime
 
-        for task in self.processingTaskList(timeSpen):
+        for task in self.processingTaskList:
             task.update_finish_time(timeSpen)
 
         if len(self.processingTaskList) == 0 and len(self.bufferedTaskList) == 0:
