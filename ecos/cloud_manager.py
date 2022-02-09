@@ -13,6 +13,13 @@ class CloudManager:
         # 1 : FINISHED, 2 : RUNNABLE
         self.state = 1
 
+        #minseon
+        self.cloud_id = 0
+
+    #minseon
+    def get_cloud_id(self):
+        return self.cloud_id
+
     def get_state(self):
         return self.state
 

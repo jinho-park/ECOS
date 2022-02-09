@@ -44,8 +44,16 @@ class Simulator:
         self.numOfEdge = 0
         self.num_device = 0
 
+        #server id setting
+        #self.CloudId = 0
+        #self.EdgeId = 1
+
         # task configuration
         self.task_look_up_table = list()
+
+    #minseon
+    #server edge id setting
+
 
     def initialize(self, configure, _network, _app, _num_of_edge):
         self.terminate_time = int(configure["simulation_time"])

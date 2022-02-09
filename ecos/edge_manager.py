@@ -6,12 +6,22 @@ from ecos.simulator import Simulator
 # 22.01.05
 class EdgeManager:
     def __init__(self, edge_props, orchestrate=None):
-        self.edge_id = 0
+        #self.edge_id = 0
         self.edge_list = list()
         self.edge_props = edge_props
         self.orchestrate_policy = orchestrate
         # 1 : FINISHED, 2 : RUNNABLE
         self.state = 1
+
+        # minseon
+        self.edge_id = 1
+
+    #minseon
+    def get_edge_id(self):
+        return self.edge_id
+    def get_edge_list(self, edge):
+        return self.edge_list
+
 
     def get_state(self):
         return self.state
@@ -59,3 +69,7 @@ class EdgeManager:
         evt = Event(msg, event.get_task())
 
         simul.send_event(evt)
+
+    #minseon
+    #def task_processing(self, task):
+
