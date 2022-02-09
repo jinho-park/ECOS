@@ -1,3 +1,5 @@
+import random
+
 from ecos.simulator import Simulator
 
 
@@ -11,6 +13,6 @@ class Orchestrator:
         location = self.simulation.get_mobility.get_location(self.simulation.get_clock(), task)
 
         if self.policy == "RANDOM":
-            collaborationTarget = 1
+            collaborationTarget = random.random(0, 1)
 
         return collaborationTarget

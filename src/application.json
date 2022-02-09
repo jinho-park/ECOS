@@ -2,7 +2,7 @@
   "task" : [{
     "type" : 1,
     "deadline" : 100,
-    "percentage" : 10,
+    "percentage" : 40,
     "inputSize" : 1000,
     "outputSize" : 500,
     "generationRate" : 2,
@@ -11,7 +11,7 @@
   },{
     "type" : 2,
     "deadline" : 100,
-    "percentage" : 10,
+    "percentage" : 60,
     "inputSize" : 1000,
     "outputSize" : 500,
     "generationRate" : 2,

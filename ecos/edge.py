@@ -18,6 +18,7 @@ class Edge:
     def task_processing(self, task):
         # calculate available resource
         resourceUsage = 0
+        print("input task")
         for task in self.exec_list:
             resourceUsage += task.get_allocated_resource()
 

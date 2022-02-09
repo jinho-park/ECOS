@@ -9,7 +9,7 @@ from custom_scenario_factory import Custom_scenario_factory
 def main():
     configure = "./src/config.json"
     device = "./src/device.json"
-    app = "./src/device.json"
+    app = "./src/application.json"
     net = "./src/network.json"
 
     with open(configure, 'r') as f:
@@ -25,7 +25,7 @@ def main():
         net_data = json.load(f)
 
     simul = Simulator.get_instance()
-    if simul.initialize(configure_data, net_data, app_data, len(device_data["edge"])) == False:
+    if not simul.initialize(configure_data, net_data, app_data, len(device_data["edge"])):
         print("Initialization Error")
         exit(1)
 
