@@ -17,6 +17,7 @@ class Task_generator:
 
     def create_task(self, simulationTime):
         self.taskList.clear()
+
         for i in range(self.num_of_device):
             randomTaskType = -1
             taskTypeSelector = random.randrange(0, 100)
@@ -37,7 +38,6 @@ class Task_generator:
             poissonMean = self.task_prop['task'][randomTaskType-1]['generationRate']
             activePeriod = self.task_prop['task'][randomTaskType-1]['activePeriod']
             idlePeriod = self.task_prop['task'][randomTaskType-1]['idlePeriod']
-            length = self.task_prop['task'][randomTaskType-1]['inputSize']
             activePeriodStartTime = random.randrange(10, 10+activePeriod)
             virtualTime = activePeriodStartTime
 

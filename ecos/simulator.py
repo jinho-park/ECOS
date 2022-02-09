@@ -128,14 +128,23 @@ class Simulator:
             self.clock = 0
 
         # schedule main object
+        # create task
         event = Event({"task": "create"}, None, 1)
         self.send_event(event)
 
+        # progress
+        event = Event({"simulation": "progress"}, None, 1)
+        self.send_event(event)
+
+        # stop
+        event = Event({"simulation": "stop"}, None, 20)
+        self.send_event(event)
+
         while True:
-            if self.run_clock_tick() or self.abruptTerminate:
+            if self.run_clock_tick() and self.abruptTerminate:
                 break
 
-            if self.clock >= self.terminate_time and self.terminate_time > 0.0:
+            if self.clock >= self.terminate_time > 0.0:
                 self.run_stop()
                 self.clock = self.terminate_time
                 break
@@ -148,6 +157,11 @@ class Simulator:
         return clock
 
     def run_stop(self):
+        for entity in self.entities:
+            entity.shutdown_entity()
+
+        self.running = False
+
         print("Simulation Stop")
 
     def finish_simulation(self):
@@ -162,7 +176,6 @@ class Simulator:
 
     def run_clock_tick(self):
         #
-        entities_size = len(self.entities)
         queue_empty = False
 
         for item in self.entities:
@@ -191,6 +204,19 @@ class Simulator:
                 if time == i.get_time():
                     event_list.append(i)
 
+            # remove event in task queue
+            for item in event_list:
+                self.taskQueue.remove(item)
+
+            for item in self.taskQueue:
+                event_time = item.get_time()
+                update_time = event_time - event.get_time()
+
+                if update_time < 0:
+                    update_time = 0
+
+                item.update_time(update_time)
+
             self.clock += event.get_time()
             self.process_event(event_list)
         else:
@@ -217,6 +243,8 @@ class Simulator:
                     for task in task_list:
                         self.scenario_factory.get_device_manager().get_offload_target(task)
 
+                    self.send_event(evt)
+
                 elif msg.get("task") == "send":
                     # send the task
                     task = event.get_task()
@@ -235,15 +263,16 @@ class Simulator:
             elif msg.get("simulation"):
                 if msg.get("simulation") == "progress":
                     #
-                    progress = (self.clock() * 100)/self.terminateTime
+                    progress = (self.clock * 100)/self.terminate_time
 
                     if progress % 10 == 0:
-                        print(progress)
+                        print(progress, end='')
                     else:
-                        print(".")
+                        print(".", end='')
+
+                    self.send_event(evt)
                 elif msg.get("simulation") == "stop":
                     #
-                    print("100")
                     self.finish_simulation()
 
     def send_event(self, event):

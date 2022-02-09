@@ -1,7 +1,4 @@
-import random
 from ecos.simulator import Simulator
-from ecos.edge_manager import EdgeManager
-from ecos.cloud_manager import CloudManager
 import random
 
 
@@ -14,12 +11,7 @@ class Orchestrator:
         simul = Simulator.get_instance()
 
         if self.policy == "RANDOM":
-            Selectserver = random.choice(CloudManager.get_cloud_id(), EdgeManager.get_edge_id())
-            if Selectserver == CloudManager.get_cloud_id() :
-                collaborationTarget = CloudManager.get_cloud_id()
-
-            elif Selectserver == EdgeManager.get_edge_id() :
-                Selectedge = random.choice(EdgeManager.get_edge_list())
-                collaborationTarget = Selectedge
+            selectServer = random.randrange(0, simul.get_num_of_edge()+1)
+            collaborationTarget = selectServer
 
         return collaborationTarget

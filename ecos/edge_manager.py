@@ -34,9 +34,10 @@ class EdgeManager:
         return True
 
     def create_edge_server(self):
+        id = 0
         for i in range(len(self.edge_props)):
-            edge = Edge(self.edge_id, self.edge_props[i], Orchestrator(Simulator.get_instance().get_simulation_scenario()), 0)
-            self.edge_id += 1
+            edge = Edge(id, self.edge_props[i], Orchestrator(Simulator.get_instance().get_simulation_scenario()), 0)
+            id += 1
             self.edge_list.append(edge)
 
     def receive_task_from_edge(self, event):
@@ -67,7 +68,3 @@ class EdgeManager:
         evt = Event(msg, event.get_task(), 0)
 
         simul.send_event(evt)
-
-    #minseon
-    #def task_processing(self, task):
-

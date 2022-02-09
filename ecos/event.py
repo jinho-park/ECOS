@@ -12,3 +12,6 @@ class Event:
 
     def get_time(self):
         return self.time
+
+    def update_time(self, _time):
+        self.time = _time
