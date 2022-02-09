@@ -4,7 +4,7 @@ import time
 class Task:
     def __init__(self, task_prop, id):
         self.task_type = task_prop["type"]
-        self.task_size = task_prop["size"]
+        self.task_size = task_prop["inputSize"]
         self.id = id
         self.task_input_size = task_prop["inputSize"]
         self.task_output_size = task_prop["outputSize"]
@@ -51,8 +51,8 @@ class Task:
     def set_receive_time(self):
         self.task_receive_time = time.time()
 
-    def set_start_time(self):
-        self.task_start_time = time.time()
+    def set_start_time(self, _time):
+        self.task_start_time = _time
 
     def set_end_time(self):
         self.task_start_time = time.time()

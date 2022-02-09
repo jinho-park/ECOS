@@ -4,7 +4,7 @@ from ecos.simulator import Simulator
 
 class Edge:
     def __init__(self, id, props, policy, time):
-        self.CPU = props["CPU"]
+        self.CPU = props["mips"]
         self.id = id
         self.policy = policy
         self.exec_list = list()
@@ -12,13 +12,15 @@ class Edge:
         self.waiting_list = list()
         self.previous_time = time
 
+    def get_policy(self):
+        return self.policy
+
     def get_edge_id(self):
         return self.id
 
     def task_processing(self, task):
         # calculate available resource
         resourceUsage = 0
-        print("input task")
         for task in self.exec_list:
             resourceUsage += task.get_allocated_resource()
 

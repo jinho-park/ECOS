@@ -112,10 +112,15 @@ class Simulator:
     def run(self):
         if self.running is False:
             self.running = True
+
+            # check entities
+            for item in self.entities:
+                item.start_entity()
+
             self.clock = 0
 
         # schedule main object
-        event = Event({"task": "create"}, None, 0)
+        event = Event({"task": "create"}, None, 1)
         self.send_event(event)
 
         while True:
@@ -166,7 +171,7 @@ class Simulator:
                 i.get_time()
 
                 if i.get_time() < time:
-                    time = i.get_time
+                    time = i.get_time()
                     event = i
 
             event_list.append(event)
@@ -178,6 +183,7 @@ class Simulator:
                 if time == i.get_time():
                     event_list.append(i)
 
+            self.clock += event.get_time()
             self.process_event(event_list)
         else:
             queue_empty = True
@@ -187,7 +193,6 @@ class Simulator:
         return queue_empty
 
     def process_event(self, event):
-
         for evt in event:
             msg = evt.get_message()
 
@@ -202,7 +207,7 @@ class Simulator:
                     task_list = self.task_generator.get_task()
 
                     for task in task_list:
-                        self.scenario_factory.mobile_device_manager(task)
+                        self.scenario_factory.get_device_manager().get_offload_target(task)
 
                 elif msg.get("task") == "send":
                     # send the task
@@ -211,7 +216,10 @@ class Simulator:
                 elif msg.get("task") == "processing":
                     # task processing in node
                     # check each node
-                    self.scenario_factory.edgeserver_manager.check()
+                    if msg["detail"]["source"] == -1:
+                        self.scenario_factory.get_edge_manager().receive_task_from_device(evt)
+                    else:
+                        self.scenario_factory.get_edge_manager().receive_task_from_edge(evt)
             elif msg.get("network"):
                 #
                 if msg.get("network") == "transmission":

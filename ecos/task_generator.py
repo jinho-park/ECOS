@@ -10,11 +10,13 @@ class Task_generator:
         self.task_prop = task_prop
         self.taskTypeOfDevice = list()
         self.taskList = list()
+        self.taskId = 0
 
         for i in range(int(self.num_of_device)):
             self.taskTypeOfDevice.append(0)
 
     def create_task(self, simulationTime):
+        self.taskList.clear()
         for i in range(self.num_of_device):
             randomTaskType = -1
             taskTypeSelector = random.randrange(0, 100)
@@ -53,12 +55,14 @@ class Task_generator:
                     virtualTime = activePeriodStartTime
                     continue
 
-                t = Task(randomTaskType, length, self.task_prop['task'][randomTaskType-1]['outputSize'], self.task_prop['task'][randomTaskType-1]["deadline"])
+                t = Task(self.task_prop["task"][randomTaskType-1], self.taskId)
                 t.set_start_time(virtualTime)
                 self.taskList.append(t)
+                self.taskId += 1
 
     def get_task_type_of_device(self, deviceId):
         return self.taskTypeOfDevice[deviceId]
 
     def get_task(self):
-        return self.taskList
+        task_list = self.taskList
+        return task_list

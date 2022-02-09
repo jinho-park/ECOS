@@ -16,9 +16,11 @@ class CloudManager:
     def get_state(self):
         return self.state
 
-    def run(self):
+    def start_entity(self):
         if self.state == 1:
             self.state = 2
+
+        self.create_cloud_server()
 
         return True
 

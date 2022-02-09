@@ -2,6 +2,7 @@ import random
 from ecos.task import Task
 from ecos.device import Device
 from ecos.event import Event
+from ecos.simulator import Simulator
 
 
 class DeviceManager:
@@ -12,7 +13,6 @@ class DeviceManager:
         self.num_device = num_device
         self.orchestrate_policy = orchestrate
         self.taskID = 0
-        self.connectEdge = -1
         # 1 : FINISHED, 2 : RUNNABLE
         self.state = 1
 
@@ -38,7 +38,7 @@ class DeviceManager:
     def get_state(self):
         return self.state
 
-    def run(self):
+    def start_entity(self):
         if self.state == 1:
             self.state = 2
 
@@ -51,16 +51,17 @@ class DeviceManager:
         return True
 
     def set_connect_edge(self):
-        for i in range(self.num_device):
+        for device in self.device_list:
             randomConnectEdge = -1
             edgeSelector = random.randrange(0, 100)
             edgePercentage = 0
 
-            for j in self.edge_props:
-                edgePercentage += int(j['percentage'])
+            for j in range(len(self.edge_props)):
+                edgePercentage += int(self.edge_props[j]['percentage'])
 
                 if edgeSelector <= edgePercentage:
-                    randomConnectEdge = i
+                    randomConnectEdge = j
+                    device.set_connected_edge(randomConnectEdge)
                     break
 
             if randomConnectEdge == -1:
@@ -70,21 +71,23 @@ class DeviceManager:
     def get_offload_target(self, task):
         # if task offloading is decision in mobile device,
         # offloading policy operates in this function
-        if self.connectEdge == -1:
+        sending_target = random.randrange(1, Simulator.get_instance().get_num_of_edge())
+        if sending_target == -1:
             print("Device connection is error")
             exit(1)
 
         msg = {
-            "type" : "task",
+            "task" : "processing",
             "detail" : {
                 "id" : 0,
                 "delay" : 0,
-                "dest" : self.connectEdge
+                "source" : -1,
+                "dest" : sending_target
             }
         }
 
-        event = Event(msg, task)
-        self.simulator.send_event(event)
+        event = Event(msg, task, 0)
+        Simulator.get_instance().send_event(event)
 
     def create_task(self, edge_prop):
         task = Task(edge_prop, ++self.taskID)
