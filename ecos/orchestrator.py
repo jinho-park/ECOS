@@ -1,3 +1,5 @@
+import random
+
 from ecos.simulator import Simulator
 from ecos.edge_manager import EdgeManager
 from ecos.cloud_manager import CloudManager
@@ -22,6 +24,5 @@ class Orchestrator:
             elif Selectserver == EdgeManager.get_edge_id() :
                 Selectedge = random.choice(EdgeManager.get_edge_list())
                 collaborationTarget = Selectedge
-
 
         return collaborationTarget

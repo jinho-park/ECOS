@@ -1,5 +1,7 @@
 import json
 from enum import Enum
+from ecos.event import Event
+from ecos.task_generator import Task_generator
 
 
 # 2022.01.07
@@ -50,6 +52,7 @@ class Simulator:
 
         # task configuration
         self.task_look_up_table = list()
+        self.task_generator = None
 
     #minseon
     #server edge id setting
@@ -76,6 +79,7 @@ class Simulator:
 
     def set_mobile_device(self, _num_device):
         self.num_device = _num_device
+        self.task_generator = Task_generator(_num_device, self.task_look_up_table)
 
     def get_warmup_period(self):
         return self.warmUpPeriod
@@ -117,6 +121,10 @@ class Simulator:
         if self.running is False:
             self.running = True
             self.clock = 0
+
+        # schedule main object
+        event = Event({"task": "create"}, None, 0)
+        self.send_event(event)
 
         while True:
             if self.run_clock_tick() or self.abruptTerminate:
@@ -165,7 +173,7 @@ class Simulator:
             for i in self.taskQueue:
                 i.get_time()
 
-                if i.get_time < time:
+                if i.get_time() < time:
                     time = i.get_time
                     event = i
 
@@ -187,41 +195,48 @@ class Simulator:
         return queue_empty
 
     def process_event(self, event):
-        msg = event.get_message()
 
-        # event described by json
-        # call the event depend on the function
-        if msg.get("task"):
-            #
-            if msg.get("task") == "create":
-                #task create
-                task = event.get_task()
-                self.scenario_factory.mobile_device_manager(task)
-            elif msg.get("task") == "send":
-                #send the task
-                task = event.get_task()
-                self.scenario_factory.network_model.enqueue(task)
-            elif msg.get("task") == "processing":
-                #task processing in node
-                # check each node
-                self.scenario_factory.edgeserver_manager.check()
-        elif msg.get("network"):
-            #
-            if msg.get("network") == "transmission":
-                self.scenario_factory.network_model.check()
-        elif msg.get("simulation"):
-            if msg.get("simulation") == "progress":
-                #
-                progress = (self.clock() * 100)/self.terminateTime
+        for evt in event:
+            msg = evt.get_message()
 
-                if progress % 10 == 0:
-                    print(progress)
-                else:
-                    print(".")
-            elif msg.get("simulation") == "stop":
+            # event described by json
+            # call the event depend on the function
+            if msg.get("task"):
                 #
-                print("100")
-                self.finish_simulation()
+                if msg.get("task") == "create":
+                    # task create
+                    self.task_generator.create_task(self.clock)
+
+                    task_list = self.task_generator.get_task()
+
+                    for task in task_list:
+                        self.scenario_factory.mobile_device_manager(task)
+
+                elif msg.get("task") == "send":
+                    # send the task
+                    task = event.get_task()
+                    self.scenario_factory.network_model.enqueue(task)
+                elif msg.get("task") == "processing":
+                    # task processing in node
+                    # check each node
+                    self.scenario_factory.edgeserver_manager.check()
+            elif msg.get("network"):
+                #
+                if msg.get("network") == "transmission":
+                    self.scenario_factory.network_model.check()
+            elif msg.get("simulation"):
+                if msg.get("simulation") == "progress":
+                    #
+                    progress = (self.clock() * 100)/self.terminateTime
+
+                    if progress % 10 == 0:
+                        print(progress)
+                    else:
+                        print(".")
+                elif msg.get("simulation") == "stop":
+                    #
+                    print("100")
+                    self.finish_simulation()
 
     def send_event(self, event):
         #

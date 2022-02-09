@@ -2,24 +2,28 @@ import random
 import numpy as np
 from ecos.task import Task
 
+
 # 21.11.17
 class Task_generator:
     def __init__(self, _num_of_device, task_prop):
         self.num_of_device = _num_of_device
         self.task_prop = task_prop
-        self.taskTypeOfDevice = list(self.num_of_device)
+        self.taskTypeOfDevice = list()
         self.taskList = list()
 
-    def initialize_model(self, simulationTime):
+        for i in range(int(self.num_of_device)):
+            self.taskTypeOfDevice.append(0)
+
+    def create_task(self, simulationTime):
         for i in range(self.num_of_device):
             randomTaskType = -1
-            taskTypeSelector = random.random(0, 100)
+            taskTypeSelector = random.randrange(0, 100)
             taskTypePercentage = 0
 
-            for j in self.task_prop['task']:
-                taskTypePercentage += j['percentage']
+            for j in self.task_prop["task"]:
+                taskTypePercentage += j["percentage"]
                 if taskTypeSelector <= taskTypePercentage:
-                    randomTaskType = j['type']
+                    randomTaskType = j["type"]
                     break
 
             if randomTaskType == -1:
@@ -32,7 +36,7 @@ class Task_generator:
             activePeriod = self.task_prop['task'][randomTaskType-1]['activePeriod']
             idlePeriod = self.task_prop['task'][randomTaskType-1]['idlePeriod']
             length = self.task_prop['task'][randomTaskType-1]['inputSize']
-            activePeriodStartTime = random.random(10, 10+activePeriod)
+            activePeriodStartTime = random.randrange(10, 10+activePeriod)
             virtualTime = activePeriodStartTime
 
             while virtualTime < simulationTime:
@@ -49,9 +53,12 @@ class Task_generator:
                     virtualTime = activePeriodStartTime
                     continue
 
-                t = task(randomTaskType, length, self.task_prop['task'][randomTaskType-1]['outputSize'], self.task_prop['task'][randomTaskType-1]["deadline"])
+                t = Task(randomTaskType, length, self.task_prop['task'][randomTaskType-1]['outputSize'], self.task_prop['task'][randomTaskType-1]["deadline"])
                 t.set_start_time(virtualTime)
                 self.taskList.append(t)
 
     def get_task_type_of_device(self, deviceId):
         return self.taskTypeOfDevice[deviceId]
+
+    def get_task(self):
+        return self.taskList
