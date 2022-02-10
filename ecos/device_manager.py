@@ -7,7 +7,7 @@ from ecos.simulator import Simulator
 
 class DeviceManager:
     def __init__(self, device_props, num_device, edge_props, orchestrate=None):
-        self.device_list = list()
+        self.node_list = list()
         self.device_props = device_props
         self.edge_props = edge_props
         self.num_device = num_device
@@ -24,16 +24,19 @@ class DeviceManager:
     def create_device_with_policy(self):
         for i in range(self.num_device):
             device = Device(self.device_props[i], self.orchestrate_policy)
-            self.device_list.append(device)
+            self.node_list.append(device)
 
         self.set_connect_edge()
 
     def create_device_without_policy(self):
         for i in range(self.num_device):
             device = Device(i, self.device_props["mips"])
-            self.device_list.append(device)
+            self.node_list.append(device)
 
         self.set_connect_edge()
+
+    def get_node_list(self):
+        return self.node_list
 
     def get_state(self):
         return self.state
@@ -51,7 +54,7 @@ class DeviceManager:
         return True
 
     def set_connect_edge(self):
-        for device in self.device_list:
+        for device in self.node_list:
             randomConnectEdge = -1
             edgeSelector = random.randrange(0, 100)
             edgePercentage = 0

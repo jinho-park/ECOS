@@ -119,8 +119,10 @@ class Log:
                 }
             }
 
-        with open(self.file_name, 'w', encoding="utf-8") as make_file:
-            json.dump(result, make_file, ensure_ascii=False, indent="\n")
+            print(result)
+
+            with open(self.file_name, 'w', encoding="utf-8") as make_file:
+                json.dump(result, make_file, ensure_ascii=False, indent="\n")
 
     def task_end(self, task):
         self.record_log(task)

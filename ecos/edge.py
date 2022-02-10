@@ -35,8 +35,8 @@ class Edge:
         timeSpen = simulationTime - self.previous_time
 
         for task in self.exec_list:
-            task.update_remain_size(timeSpen)
-            task.set_finish_node()
+            task.set_remain_size(timeSpen)
+            task.set_finish_node(1)
 
         if len(self.exec_list) == 0 and len(self.waiting_list) == 0:
             self.previous_time = simulationTime
@@ -61,6 +61,7 @@ class Edge:
 
                 if requiredResource > resourceUsage:
                     break
+
                 task.set_allocated_resource()
                 task.set_buffering_time(Simulator.get_instance().get_clock(), 1)
                 resourceUsage -= requiredResource

@@ -140,6 +140,10 @@ class Simulator:
         event = Event({"simulation": "stop"}, None, 20)
         self.send_event(event)
 
+        # check processing
+        event = Event({"task": "check"}, None, 1)
+        self.send_event(event)
+
         while True:
             if self.run_clock_tick() and self.abruptTerminate:
                 break
@@ -256,6 +260,12 @@ class Simulator:
                         self.scenario_factory.get_edge_manager().receive_task_from_device(evt)
                     else:
                         self.scenario_factory.get_edge_manager().receive_task_from_edge(evt)
+                elif msg.get("task") == "check":
+                    for entity in self.entities:
+                        for node in entity.get_node_list():
+                            node.update_task_state(self.clock)
+
+                    self.send_event(evt)
             elif msg.get("network"):
                 #
                 if msg.get("network") == "transmission":

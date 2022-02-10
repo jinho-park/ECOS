@@ -7,14 +7,14 @@ from ecos.orchestrator import Orchestrator
 # 22.01.05
 class EdgeManager:
     def __init__(self, edge_props):
-        self.edge_list = list()
+        self.node_list = list()
         self.edge_props = edge_props
         # 1 : FINISHED, 2 : RUNNABLE
         self.state = 1
 
     #minseon
-    def get_edge_list(self, edge):
-        return self.edge_list
+    def get_node_list(self):
+        return self.node_list
 
     def get_state(self):
         return self.state
@@ -38,13 +38,13 @@ class EdgeManager:
         for i in range(len(self.edge_props)):
             edge = Edge(id, self.edge_props[i], Orchestrator(Simulator.get_instance().get_simulation_scenario()), 0)
             id += 1
-            self.edge_list.append(edge)
+            self.node_list.append(edge)
 
     def receive_task_from_edge(self, event):
         # find edge
         msg = event.get_message()
 
-        for node in self.edge_list:
+        for node in self.node_list:
             nodeId = node.get_edge_id()
 
             if nodeId == msg['detail']['dest']:
@@ -54,7 +54,7 @@ class EdgeManager:
         msg = event.get_message()
         source_edge = int(msg["detail"]["dest"])
         task = event.get_task()
-        dest = self.edge_list[source_edge - 1].get_policy().offloading_target(task, source_edge)
+        dest = self.node_list[source_edge - 1].get_policy().offloading_target(task, source_edge)
         simul = Simulator.get_instance()
         msg["detail"]["id"] = 1
 
