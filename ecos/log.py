@@ -1,4 +1,5 @@
 import json
+import numpy as np
 from enum import Enum
 
 class Log:
@@ -61,8 +62,8 @@ class Log:
     def get_completed_task(self):
         return self.completed_task
 
-    def sim_start(self, file, name):
-        self.folder_path = file
+    def sim_start(self, name):
+        # self.folder_path = file
         self.file_name = name
 
     def sim_stop(self):
@@ -72,23 +73,53 @@ class Log:
             completed_task_edge_sum = self.completed_task_edge
             completed_task_mobile_sum = self.completed_task_mobile
 
-            network_delay_avg = sum(self.network_delay) / len(self.network_delay)
-            network_delay_gsm_avg = sum(self.network_delay_gsm) / len(self.network_delay_gsm)
-            network_delay_wan_avg = sum(self.network_delay_wan) / len(self.network_delay_wan)
-            network_delay_man_avg = sum(self.network_delay_man) / len(self.network_delay_man)
-            network_delay_lan_avg = sum(self.network_delay_lan) / len(self.network_delay_lan)
+            network_delay_avg = np.divide(sum(self.network_delay), len(self.network_delay),
+                                          out=np.zeros_like(sum(self.network_delay)),
+                                          where=len(self.network_delay) != 0,
+                                          casting="unsafe")
+            network_delay_gsm_avg = np.divide(sum(self.network_delay_gsm), len(self.network_delay_gsm),
+                                              out=np.zeros_like(sum(self.network_delay_gsm)),
+                                              where=len(self.network_delay_gsm),
+                                              casting="unsafe")
+            network_delay_wan_avg = np.divide(sum(self.network_delay_wan), len(self.network_delay_wan),
+                                              out=np.zeros_like(sum(self.network_delay_wan)),
+                                              where=len(self.network_delay_wan),  casting="unsafe")
+            network_delay_man_avg = np.divide(sum(self.network_delay_man), len(self.network_delay_man),
+                                              out=np.zeros_like(sum(self.network_delay_man)),
+                                              where=len(self.network_delay_man),  casting="unsafe")
+            network_delay_lan_avg = np.divide(sum(self.network_delay_lan), len(self.network_delay_lan),
+                                              out=np.zeros_like(sum(self.network_delay_lan)),
+                                              where=len(self.network_delay_lan),  casting="unsafe")
 
-            service_time_avg = sum(self.service_time) / len(self.service_time)
+            service_time_avg = np.divide(sum(self.service_time), len(self.service_time),
+                                         out=np.zeros_like(sum(self.service_time)),
+                                         where=len(self.service_time), casting="unsafe")
 
-            processing_time_avg = sum(self.processing_time) / len(self.processing_time)
-            processing_time_cloud_avg = sum(self.processing_time_cloud) / len(self.processing_time_cloud)
-            processing_time_edge_avg = sum(self.processing_time_edge) / len(self.processing_time_edge)
-            processing_time_mobile_avg = sum(self.processing_time_mobile) / len(self.processing_time_mobile)
+            processing_time_avg = np.divide(sum(self.processing_time), len(self.processing_time),
+                                            out=np.zeros_like(sum(self.processing_time)),
+                                            where=len(self.processing_time), casting="unsafe")
+            processing_time_cloud_avg = np.divide(sum(self.processing_time_cloud), len(self.processing_time_cloud),
+                                                  out=np.zeros_like(sum(self.processing_time_cloud)),
+                                                  where=len(self.processing_time_cloud), casting="unsafe")
+            processing_time_edge_avg = np.divide(sum(self.processing_time_edge), len(self.processing_time_edge),
+                                                 out=np.zeros_like(sum(self.processing_time_edge)),
+                                                 where=len(self.processing_time_edge), casting="unsafe")
+            processing_time_mobile_avg = np.divide(sum(self.processing_time_mobile), len(self.processing_time_mobile),
+                                                   out=np.zeros_like(sum(self.processing_time_mobile)),
+                                                   where=len(self.processing_time_mobile), casting="unsafe")
 
-            buffering_time_avg = sum(self.buffering_time) / len(self.buffering_time)
-            buffering_time_cloud_avg = sum(self.buffering_time_cloud) / len(self.buffering_time_cloud)
-            buffering_time_edge_avg = sum(self.buffering_time_edge) / len(self.buffering_time_edge)
-            buffering_time_mobile_avg = sum(self.buffering_time_mobile) / len(self.buffering_time_mobile)
+            buffering_time_avg = np.divide(sum(self.buffering_time), len(self.buffering_time),
+                                           out=np.zeros_like(sum(self.buffering_time)),
+                                           where=len(self.buffering_time), casting="unsafe")
+            buffering_time_cloud_avg = np.divide(sum(self.buffering_time_cloud), len(self.buffering_time_cloud),
+                                                 out=np.zeros_like(sum(self.buffering_time_cloud)),
+                                                 where=len(self.buffering_time_cloud), casting="unsafe")
+            buffering_time_edge_avg = np.divide(sum(self.buffering_time_cloud), len(self.buffering_time_cloud),
+                                                out=np.zeros_like(sum(self.buffering_time_cloud)),
+                                                where=len(self.buffering_time_cloud), casting="unsafe")
+            buffering_time_mobile_avg = np.divide(sum(self.buffering_time_mobile), len(self.buffering_time_mobile),
+                                                  out=np.zeros_like(sum(self.buffering_time_mobile)),
+                                                  where=len(self.buffering_time_mobile), casting="unsafe")
 
             result = {
                 "completed_task": {
@@ -97,29 +128,27 @@ class Log:
                     "completed_task_edge": completed_task_edge_sum,
                     "completed_task_mobile": completed_task_mobile_sum
                 },
-                "service_time" : service_time_avg,
+                "service_time" : service_time_avg.tolist(),
                 "processing_delay": {
-                    "processing_time" : processing_time_avg,
-                    "processing_time_cloud_avg": processing_time_cloud_avg,
-                    "processing_time_edge_avg": processing_time_edge_avg,
-                    "processing_time_mobile_avg": processing_time_mobile_avg
+                    "processing_time" : processing_time_avg.tolist(),
+                    "processing_time_cloud_avg": processing_time_cloud_avg.tolist(),
+                    "processing_time_edge_avg": processing_time_edge_avg.tolist(),
+                    "processing_time_mobile_avg": processing_time_mobile_avg.tolist()
                 },
                 "network_delay": {
-                    "network_time": network_delay_avg,
-                    "network_delay_gsm": network_delay_gsm_avg,
-                    "network_delay_wan": network_delay_wan_avg,
-                    "network_delay_man": network_delay_man_avg,
-                    "network_delay_lan": network_delay_lan_avg,
+                    "network_time": network_delay_avg.tolist(),
+                    "network_delay_gsm": network_delay_gsm_avg.tolist(),
+                    "network_delay_wan": network_delay_wan_avg.tolist(),
+                    "network_delay_man": network_delay_man_avg.tolist(),
+                    "network_delay_lan": network_delay_lan_avg.tolist(),
                 },
                 "buffering_delay": {
-                    "buffering_time": buffering_time_avg,
-                    "buffering_time_cloud": buffering_time_cloud_avg,
-                    "buffering_time_edge": buffering_time_edge_avg,
-                    "buffering_time_mobile": buffering_time_mobile_avg
+                    "buffering_time": buffering_time_avg.tolist(),
+                    "buffering_time_cloud": buffering_time_cloud_avg.tolist(),
+                    "buffering_time_edge": buffering_time_edge_avg.tolist(),
+                    "buffering_time_mobile": buffering_time_mobile_avg.tolist()
                 }
             }
-
-            print(result)
 
             with open(self.file_name, 'w', encoding="utf-8") as make_file:
                 json.dump(result, make_file, ensure_ascii=False, indent="\n")
@@ -128,34 +157,34 @@ class Log:
         self.record_log(task)
 
     def record_log(self, task):
-        type = task.get_task_type()
+        # type = task.get_task_type()
 
         # processing time
-        self.processing_time_cloud[type].append(task.get_processing_time(2))
-        self.processing_time_edge[type].append(task.get_processing_time(1))
-        self.processing_time_mobile[type].append(task.get_processing_time(0))
+        self.processing_time_cloud.append(task.get_processing_time(2))
+        self.processing_time_edge.append(task.get_processing_time(1))
+        self.processing_time_mobile.append(task.get_processing_time(0))
         processing_time = task.get_processing_time(0) + task.get_processing_time(1) + task.get_processing_time(2)
-        self.processing_time[type].append(processing_time)
+        self.processing_time.append(processing_time)
 
         # buffering time
-        self.buffering_time_cloud[type].append((task.get_buffering_time(2)))
-        self.buffering_time_edge[type].append(task.get_buffering_time(1))
-        self.buffering_time_mobile[type].append(task.get_buffering_time(0))
+        self.buffering_time_cloud.append((task.get_buffering_time(2)))
+        self.buffering_time_edge.append(task.get_buffering_time(1))
+        self.buffering_time_mobile.append(task.get_buffering_time(0))
         buffering_time = task.get_buffering_time(0) + task.get_buffering_time(1) + task.get_buffering_time(2)
-        self.buffering_time[type].append(buffering_time)
+        self.buffering_time.append(buffering_time)
 
         # network delay
-        self.network_delay_gsm[type].append(task.get_network_delay(0))
-        self.network_delay_wan[type].append(task.get_network_delay(1))
-        self.network_delay_man[type].append(task.get_network_delay(2))
-        self.network_delay_lan[type].append(task.get_network_delay(3))
+        self.network_delay_gsm.append(task.get_network_delay(0))
+        self.network_delay_wan.append(task.get_network_delay(1))
+        self.network_delay_man.append(task.get_network_delay(2))
+        self.network_delay_lan.append(task.get_network_delay(3))
         network_delay = task.get_network_delay(0) + task.get_network_delay(1) + \
                         task.get_network_delay(2) + task.get_network_delay(3)
-        self.network_delay[type].append(network_delay)
+        self.network_delay.append(network_delay)
 
         # service time
         service_time = processing_time + buffering_time + network_delay
-        self.service_time[type].append(service_time)
+        self.service_time.append(service_time)
 
         if task.get_task_deadline() > service_time:
             self.completed_task += 1

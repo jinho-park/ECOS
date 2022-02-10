@@ -24,8 +24,8 @@ class Task:
         self.finish_node = 0
         self.allocated_resource = 0
 
-    def create_task(self):
-        self.task_birth_time = time.time()
+    def create_task(self, _time):
+        self.task_birth_time = _time
         self.task_remain_size = self.task_size
 
     def get_task_type(self):

@@ -56,7 +56,7 @@ class Task_generator:
                     continue
 
                 t = Task(self.task_prop["task"][randomTaskType-1], self.taskId)
-                t.set_start_time(virtualTime)
+                t.create_task(virtualTime)
                 self.taskList.append(t)
                 self.taskId += 1
 
