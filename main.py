@@ -5,12 +5,15 @@ from ecos import EdgeManager
 from ecos import DeviceManager
 from ecos import CloudManager
 from custom_scenario_factory import Custom_scenario_factory
+from ecos import Log
 
 def main():
     configure = "./src/config.json"
     device = "./src/device.json"
     app = "./src/application.json"
     net = "./src/network.json"
+
+    result = "./src/"
 
     with open(configure, 'r') as f:
         configure_data = json.load(f)
@@ -33,6 +36,7 @@ def main():
                                int(configure_data["max_num_of_mobile_device"]),
                                int(configure_data["mobile_device_counter"])):
         for policy in configure_data["orchestration_policy"]:
+            outputFolderPath = result + "_" + policy + "_" + str(mobile_device)+".json"
             deviceManager = DeviceManager(device_data["mobile"], mobile_device, device_data["edge"])
             print("Device creating is completed")
             edgeManager = EdgeManager(device_data["edge"])
@@ -42,6 +46,7 @@ def main():
             simul.set_mobile_device(mobile_device)
             simul.set_simulation_factory(scenario_factory)
             print("Start simulator")
+            Log.get_instance().sim_start(outputFolderPath)
             simul.start_simulator()
 
 if __name__ == '__main__':

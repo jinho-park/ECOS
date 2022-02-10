@@ -45,14 +45,16 @@ class Edge:
         timeSpen = simulationTime - self.previous_time
 
         for task in self.exec_list:
-            task.set_remain_size(timeSpen)
+            allocatedResource = task.get_allocated_resource()
+            remainSize = task.get_remain_size() - (allocatedResource * timeSpen)
+            task.set_remain_size(remainSize)
             task.set_finish_node(1)
 
         if len(self.exec_list) == 0 and len(self.waiting_list) == 0:
             self.previous_time = simulationTime
 
         for task in self.exec_list:
-            if task.get_remain_size() == 0:
+            if task.get_remain_size() <= 0:
                 self.exec_list.remove(task)
                 self.finish_list.append(task)
                 self.finish_task(task)
@@ -102,7 +104,6 @@ class Edge:
 
     def finish_task(self, task):
         task.set_finish_node(1)
-        print("finish task")
         Log.get_instance().record_log(task)
         self.finish_list.remove(task)
 

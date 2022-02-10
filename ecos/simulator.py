@@ -2,6 +2,7 @@ import json
 from enum import Enum
 from ecos.event import Event
 from ecos.task_generator import Task_generator
+from ecos.log import Log
 
 
 # 2022.01.07
@@ -167,8 +168,6 @@ class Simulator:
 
         self.running = False
 
-        print("Simulation Stop")
-
     def finish_simulation(self):
         #
         if self.abruptTerminate is True:
@@ -178,6 +177,8 @@ class Simulator:
 
         for ent in self.entities:
             ent.shutdown_entity()
+
+        Log.get_instance().sim_stop()
 
     def run_clock_tick(self):
         #
@@ -272,14 +273,14 @@ class Simulator:
             elif msg.get("simulation"):
                 if msg.get("simulation") == "progress":
                     #
-                    progress = (self.clock * 100)/self.terminate_time
+                    progress = int((self.clock * 100)/self.terminate_time)
 
                     if progress % 10 == 0:
                         print(progress, end='')
                     else:
                         print(".", end='')
 
-                    if self.clock < self.terminate_time:
+                    if self.clock <= self.terminate_time:
                         evt.update_time(self.terminate_time/100)
                         self.send_event(evt)
 
