@@ -1,5 +1,6 @@
 from ecos.log import Log
 from ecos.simulator import Simulator
+from ecos.event import Event
 
 
 class Edge:
@@ -28,6 +29,15 @@ class Edge:
             requiredResource = task.get_remain_size() / task.get_task_deadline()
             task.set_allocated_resource(requiredResource)
             self.exec_list.append(task)
+            msg = {
+                "task": "check",
+                "detail": {
+                    "node": "edge",
+                    "id": self.id
+                }
+            }
+            event = Event(msg, None, task.get_task_deadline())
+            Simulator.get_instance().send_event(event)
         else:
             self.waiting_list.append(task)
 
@@ -62,11 +72,33 @@ class Edge:
                 if requiredResource > resourceUsage:
                     break
 
-                task.set_allocated_resource()
+                task.set_allocated_resource(requiredResource)
                 task.set_buffering_time(Simulator.get_instance().get_clock(), 1)
                 resourceUsage -= requiredResource
                 self.exec_list.append(task)
                 self.waiting_list.remove(task)
+
+            # add event
+            nextEvent = 99999999999999
+            for task in self.exec_list:
+                remainingLength = task.get_remain_size()
+                estimatedFinishTime = (remainingLength / task.get_allocated_resource())
+
+                if estimatedFinishTime < 1:
+                    estimatedFinishTime = 1
+
+                if estimatedFinishTime < nextEvent:
+                    nextEvent = estimatedFinishTime
+
+            msg = {
+                "task": "check",
+                "detail": {
+                    "node": "edge",
+                    "id": self.id
+                }
+            }
+            event = Event(msg, None, nextEvent)
+            Simulator.get_instance().send_event(event)
 
     def finish_task(self, task):
         task.set_finish_node(1)

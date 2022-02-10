@@ -59,7 +59,7 @@ class Simulator:
 
 
     def initialize(self, configure, _network, _app, _num_of_edge):
-        self.terminate_time = int(configure["simulation_time"])
+        self.terminate_time = int(configure["simulation_time"]) * 60
         self.orchestrator_policy = configure["orchestration_policy"]
         self.minNumOfMobileDevice = int(configure["min_num_of_mobile_device"])
         self.maxNumOfMobileDevice = int(configure["max_num_of_mobile_device"])
@@ -133,7 +133,7 @@ class Simulator:
         self.send_event(event)
 
         # progress
-        event = Event({"simulation": "progress"}, None, 1)
+        event = Event({"simulation": "progress"}, None, self.terminate_time/100)
         self.send_event(event)
 
         # stop
@@ -141,8 +141,8 @@ class Simulator:
         self.send_event(event)
 
         # check processing
-        event = Event({"task": "check"}, None, 1)
-        self.send_event(event)
+        # event = Event({"task": "check"}, None, 1)
+        # self.send_event(event)
 
         while True:
             if self.run_clock_tick() and self.abruptTerminate:
@@ -261,9 +261,15 @@ class Simulator:
                     else:
                         self.scenario_factory.get_edge_manager().receive_task_from_edge(evt)
                 elif msg.get("task") == "check":
-                    for entity in self.entities:
-                        for node in entity.get_node_list():
-                            node.update_task_state(self.clock)
+                    if msg["detail"]["node"] == "device":
+                        device = self.entities[2].get_node_list()[msg["detail"]["id"]]
+                        device.update_task_state(self.clock)
+                    elif msg["detail"]["node"] == "edge":
+                        edge = self.entities[0].get_node_list()[msg["detail"]["id"]]
+                        edge.update_task_state(self.clock)
+                    elif msg["detail"]["node"] == "cloud":
+                        cloud = self.entities[1].get_node_list()[msg["detail"]["id"]]
+                        cloud.update_task_state(self.clock)
 
                     self.send_event(evt)
             elif msg.get("network"):
@@ -280,7 +286,9 @@ class Simulator:
                     else:
                         print(".", end='')
 
-                    self.send_event(evt)
+                    if self.clock < self.terminate_time:
+                        self.send_event(evt)
+
                 elif msg.get("simulation") == "stop":
                     #
                     self.finish_simulation()
