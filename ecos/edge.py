@@ -75,7 +75,7 @@ class Edge:
                     break
 
                 task.set_allocated_resource(requiredResource)
-                task.set_buffering_time(Simulator.get_instance().get_clock(), 1)
+                task.set_buffering_time(Simulator.get_instance().get_clock() - task.get_birth_time() - task.get_network_delay())
                 resourceUsage -= requiredResource
                 self.exec_list.append(task)
                 self.waiting_list.remove(task)
@@ -104,6 +104,8 @@ class Edge:
 
     def finish_task(self, task):
         task.set_finish_node(1)
+        task.set_processing_time(Simulator.get_instance().get_clock() - task.get_birth_time() - task.get_buffering_time() - task.get_network_delay())
+        task.set_end_time(Simulator.get_instance().get_clock())
         Log.get_instance().record_log(task)
         self.finish_list.remove(task)
 

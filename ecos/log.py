@@ -160,17 +160,17 @@ class Log:
         # type = task.get_task_type()
 
         # processing time
-        self.processing_time_cloud.append(task.get_processing_time(2))
-        self.processing_time_edge.append(task.get_processing_time(1))
-        self.processing_time_mobile.append(task.get_processing_time(0))
-        processing_time = task.get_processing_time(0) + task.get_processing_time(1) + task.get_processing_time(2)
+        self.processing_time_cloud.append(task.get_processing_time())
+        self.processing_time_edge.append(task.get_processing_time())
+        self.processing_time_mobile.append(task.get_processing_time())
+        processing_time = task.get_processing_time()
         self.processing_time.append(processing_time)
 
         # buffering time
-        self.buffering_time_cloud.append((task.get_buffering_time(2)))
-        self.buffering_time_edge.append(task.get_buffering_time(1))
-        self.buffering_time_mobile.append(task.get_buffering_time(0))
-        buffering_time = task.get_buffering_time(0) + task.get_buffering_time(1) + task.get_buffering_time(2)
+        self.buffering_time_cloud.append((task.get_buffering_time()))
+        self.buffering_time_edge.append(task.get_buffering_time())
+        self.buffering_time_mobile.append(task.get_buffering_time())
+        buffering_time = task.get_buffering_time()
         self.buffering_time.append(buffering_time)
 
         # network delay

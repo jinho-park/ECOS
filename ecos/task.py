@@ -16,8 +16,8 @@ class Task:
         self.task_start_time = 0
         self.task_end_time = 0
         # 0 = mobile, 1 = edge, 2 = cloud
-        self.buffering_time = [0, 0, 0]
-        self.processing_time = [0, 0, 0]
+        self.buffering_time = 0
+        self.processing_time = 0
         # lan: mobile-edge, man: edge-edge, wan: edge-cloud
         # 0= gsm, 1=wan, 2=man, 3=lan
         self.network_delay = [0, 0, 0, 0]
@@ -55,26 +55,26 @@ class Task:
     def set_start_time(self, _time):
         self.task_start_time = _time
 
-    def set_end_time(self):
-        self.task_start_time = time.time()
+    def set_end_time(self, _time):
+        self.task_end_time = _time
 
     def update_finish_time(self, _time):
         self.task_end_time = _time
 
-    def set_buffering_time(self, buff, type):
-        self.buffering_time[type] = buff
+    def set_buffering_time(self, buff):
+        self.buffering_time = buff
 
-    def set_processing_time(self, proc, type):
-        self.processing_time[type] = proc
+    def set_processing_time(self, proc):
+        self.processing_time = proc
 
-    def set_network_delay(self, value, type):
-        self.network_delay[type] = value
+    def set_network_delay(self, value):
+        self.network_delay = value
 
-    def get_buffering_time(self, type):
-        return self.buffering_time[type]
+    def get_buffering_time(self):
+        return self.buffering_time
 
-    def get_processing_time(self, type):
-        return self.processing_time[type]
+    def get_processing_time(self):
+        return self.processing_time
 
     def get_network_delay(self, type):
         return self.network_delay[type]
