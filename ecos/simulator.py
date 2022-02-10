@@ -47,16 +47,14 @@ class Simulator:
         self.numOfEdge = 0
         self.num_device = 0
 
-        #server id setting
-        #self.CloudId = 0
-        #self.EdgeId = 1
+        #minseon server id setting
+        #self.CloudId = None
+        #self.EdgeId = None
 
         # task configuration
         self.task_look_up_table = list()
         self.task_generator = None
 
-    #minseon
-    #server edge id setting
 
 
     def initialize(self, configure, _network, _app, _num_of_edge):
@@ -71,6 +69,11 @@ class Simulator:
         self.task_look_up_table = _app
 
         return True
+
+    #minseon
+    #def get_cloud_id(self, _scenario_factory):
+    #    self.scenario_factory = _scenario_factory
+    #    CloudId = _scenario_factory.get_cloud_manager().get
 
     def set_simulation_factory(self, _scenario_factory):
         self.scenario_factory = _scenario_factory

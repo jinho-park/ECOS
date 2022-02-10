@@ -11,6 +11,8 @@ class EdgeManager:
         self.edge_props = edge_props
         # 1 : FINISHED, 2 : RUNNABLE
         self.state = 1
+        #minseon
+        #self.edge_id = Edge.get_edge_id(self)
 
     #minseon
     def get_node_list(self):
@@ -34,7 +36,7 @@ class EdgeManager:
         return True
 
     def create_edge_server(self):
-        id = 0
+        id = 1
         for i in range(len(self.edge_props)):
             edge = Edge(id, self.edge_props[i], Orchestrator(Simulator.get_instance().get_simulation_scenario()), 0)
             id += 1

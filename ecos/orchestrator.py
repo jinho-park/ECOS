@@ -11,7 +11,12 @@ class Orchestrator:
         simul = Simulator.get_instance()
 
         if self.policy == "RANDOM":
-            selectServer = random.randrange(0, simul.get_num_of_edge()+1)
+            Cloudid = simul.scenario_factory.get_cloud_manager().get_cloud_id()
+            edgeidlist = [Cloudid]
+            for i in range(simul.scenario_factory.get_edge_manager().get_node_list()):
+                edgeidlist.append(i+1)
+
+            selectServer = random.choice(edgeidlist)
             collaborationTarget = selectServer
 
         return collaborationTarget
