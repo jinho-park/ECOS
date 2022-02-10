@@ -61,7 +61,7 @@ class Cloud():
         self.waiting_list = list()
         self.previous_time = time
 
-    def get_edge_id(self):
+    def get_cloud_id(self):
         return self.id
 
     def task_processing(self, task):
