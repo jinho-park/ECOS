@@ -127,22 +127,23 @@ class Simulator:
 
             self.clock = 0
 
-        # schedule main object
-        # create task
-        event = Event({"task": "create"}, None, 1)
-        self.send_event(event)
+        self.task_generator.create_task(self.terminate_time)
 
+        print("Task creation is completed: ", len(self.task_generator.get_task()))
+
+        # schedule the task
+        for task in self.task_generator.get_task():
+            event = Event({"task": "create"}, task, task.get_start_time())
+            self.send_event(event)
+
+        # schedule main object
         # progress
         event = Event({"simulation": "progress"}, None, self.terminate_time/100)
         self.send_event(event)
 
         # stop
-        event = Event({"simulation": "stop"}, None, 20)
+        event = Event({"simulation": "stop"}, None, self.terminate_time)
         self.send_event(event)
-
-        # check processing
-        # event = Event({"task": "check"}, None, 1)
-        # self.send_event(event)
 
         while True:
             if self.run_clock_tick() and self.abruptTerminate:
@@ -221,6 +222,7 @@ class Simulator:
 
                 item.update_time(update_time)
 
+            # print(event.get_time())
             self.clock += event.get_time()
             self.process_event(event_list)
         else:
@@ -233,6 +235,7 @@ class Simulator:
     def process_event(self, event):
         for evt in event:
             msg = evt.get_message()
+            # print(msg, ":", evt.get_time())
 
             # event described by json
             # call the event depend on the function
@@ -240,18 +243,10 @@ class Simulator:
                 #
                 if msg.get("task") == "create":
                     # task create
-                    self.task_generator.create_task(self.clock)
-
-                    task_list = self.task_generator.get_task()
-
-                    for task in task_list:
-                        self.scenario_factory.get_device_manager().get_offload_target(task)
-
-                    self.send_event(evt)
-
+                    self.scenario_factory.get_device_manager().get_offload_target(evt.get_task())
                 elif msg.get("task") == "send":
                     # send the task
-                    task = event.get_task()
+                    task = evt.get_task()
                     self.scenario_factory.network_model.enqueue(task)
                 elif msg.get("task") == "processing":
                     # task processing in node
@@ -270,8 +265,6 @@ class Simulator:
                     elif msg["detail"]["node"] == "cloud":
                         cloud = self.entities[1].get_node_list()[msg["detail"]["id"]]
                         cloud.update_task_state(self.clock)
-
-                    self.send_event(evt)
             elif msg.get("network"):
                 #
                 if msg.get("network") == "transmission":
@@ -287,6 +280,7 @@ class Simulator:
                         print(".", end='')
 
                     if self.clock < self.terminate_time:
+                        evt.update_time(self.terminate_time/100)
                         self.send_event(evt)
 
                 elif msg.get("simulation") == "stop":

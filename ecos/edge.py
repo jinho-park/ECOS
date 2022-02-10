@@ -102,6 +102,7 @@ class Edge:
 
     def finish_task(self, task):
         task.set_finish_node(1)
+        print("finish task")
         Log.get_instance().record_log(task)
         self.finish_list.remove(task)
 
