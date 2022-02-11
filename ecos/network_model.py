@@ -1,61 +1,68 @@
 from ecos.simulator import Simulator
 
-#MM1Queue based network model
+
+# MM1Queue based network model
 class Network_model:
-    def __init__(self, id, _net_type):
-        self.link_id = id
-        # 0: wireless, 1: wire
-        self.net_type = _net_type
+    def __init__(self, source, dest, _bandwidth, _propagation):
+        self.link = [source, dest]
         self.poissonMean = 0
-        self.avgTaskSize = 0
-        self.num_send_task = 0
+        self.bandwidth = _bandwidth
+        self.propagation = _propagation
+        self.sumTaskSize = 0
+        self.send_task_list = list()
+        self.send_task_type = list()
 
-        num_of_task_type = 0
+        task_props = Simulator.get_instance().get_task_look_up_table()
 
-        task_lookup_table = Simulator.get_instance().get_task_look_up_table()
+        for i in range(len(task_props["task"])):
+            self.send_task_type.append(0)
 
-        for i in len(task_lookup_table):
-            weight = task_lookup_table[i]/100
-
-            if weight != 0:
-                self.poissonMean += task_lookup_table[i] * weight
-                self.avgTaskSize += task_lookup_table[i] * weight
-
-                num_of_task_type += 1
-
-        self.poissonMean = self.poissonMean/num_of_task_type
-        self.avgTaskSize = self.avgTaskSize/num_of_task_type
-
-    def get_link_id(self):
-        return self.link_id
+    def get_link(self):
+        return self.link
 
     def get_download_delay(self, task):
-        self.num_send_task += 1
+        self.send_task_list.append(task)
+        self.send_task_type[task.get_task_type() - 1] += 1
 
-        sim_setting = Simulator.get_instance()
+        self.update_MM1_parameter()
 
-        if self.net_type == 0:
-            return self.calculate_MM1(sim_setting.get_wlan_propagation_delay(),
-                                      sim_setting.get_wlan_bandwidth())
-        else:
-            return self.calculate_MM1(sim_setting.get_wlan_propagation_delay(),
-                                      sim_setting.get_wlan_bandwidth())
+        return self.calculate_MM1(self.propagation, self.bandwidth)
+
+    def update_MM1_parameter(self):
+        size_sum = 0
+        poisson = 0
+
+        task_props = Simulator.get_instance().get_task_look_up_table()
+
+        for task in self.send_task_list:
+            taskSize = task.get_input_size()
+            size_sum += taskSize
+
+        index = 0
+        for num in self.send_task_type:
+            weight = num / sum(self.send_task_type)
+
+            if weight != 0:
+                poisson += (int(task_props["task"][index]["generationRate"]) * weight)
+
+            index += 1
+
+        self.poissonMean = poisson / len(self.send_task_list)
+        self.sumTaskSize = size_sum
 
     def calculate_MM1(self, propagation_delay, bandwidth):
-        self.avgTaskSize = self.avgTaskSize * 1000 # KB to Byte
+        taskSize = self.sumTaskSize * 1000 # KB to Byte
 
         bps = bandwidth * 1000 / 8
         lamda = 1 / self.poissonMean
-        mu = bps / self.avgTaskSize
+        mu = bps / taskSize
 
-        result = 1 / (mu - lamda * self.num_send_task)
+        result = -1 / (mu - lamda * (len(self.send_task_list)))
 
-        result += propagation_delay
+        result += (propagation_delay/1000)
 
-        if result > 5:
-            return -1
-        else:
-            return result
+        return result
 
-    def update_send_task(self):
-        self.num_send_task -= 1
+    def update_send_task(self, task):
+        self.send_task_list.remove(task)
+        self.send_task_type[task.get_task_type() - 1] -= 1

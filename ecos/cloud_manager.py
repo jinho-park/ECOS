@@ -1,12 +1,13 @@
-from ecos.event import Event
 from ecos.simulator import Simulator
+from ecos.network_model import Network_model
 
 
 class CloudManager:
-    def __init__(self, cloud_props, time):
+    def __init__(self, cloud_props, network_props):
         self.node_list = list()
         self.cloud_props = cloud_props
-        self.previousTime = time
+        self.cloud_network_props = network_props
+        self.cloud_network = None
         # 1 : FINISHED, 2 : RUNNABLE
         self.state = 1
 
@@ -41,15 +42,17 @@ class CloudManager:
         #
         cloud = Cloud(0, self.cloud_props, Simulator.get_instance().get_clock())
         self.node_list.append(cloud)
+        self.cloud_network = Network_model(-1, 0, int(self.cloud_network_props["bandwidth"]),
+                                           int(self.cloud_network_props["propagation"]))
         print("Create cloud server")
 
     def receive_task(self, event):
-        msg = event.get_message()
-        simul = Simulator.get_instance()
+        cloud = self.node_list[0]
 
-        evt = Event(msg, event.get_task())
+        cloud.task_processing(event.get_task())
 
-        simul.send_event(evt)
+    def get_cloud_network(self):
+        return self.cloud_network
 
 
 class Cloud():
