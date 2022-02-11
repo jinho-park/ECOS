@@ -11,7 +11,7 @@ class Orchestrator:
         simul = Simulator.get_instance()
 
         if self.policy == "RANDOM":
-            Cloudid = simul.scenario_factory.get_cloud_manager().get_cloud_id()
+            Cloudid = simul.scenario_factory.get_cloud_manager().
             idlist = [Cloudid]
             for i in range(simul.scenario_factory.get_edge_manager().get_node_list()):
                 idlist.append(i+1)
