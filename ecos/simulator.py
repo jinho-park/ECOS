@@ -270,7 +270,7 @@ class Simulator:
                         device = self.entities[2].get_node_list()[msg["detail"]["id"]]
                         device.update_task_state(self.clock)
                     elif msg["detail"]["node"] == "edge":
-                        edge = self.entities[0].get_node_list()[msg["detail"]["id"]]
+                        edge = self.entities[0].get_node_list()[msg["detail"]["id"] - 1]
                         edge.update_task_state(self.clock)
                     elif msg["detail"]["node"] == "cloud":
                         cloud = self.entities[1].get_node_list()[msg["detail"]["id"]]

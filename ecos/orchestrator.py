@@ -12,7 +12,7 @@ class Orchestrator:
 
         if self.policy == "RANDOM":
             num_of_edge = simul.get_num_of_edge()
-            selectServer = random.randrange(0, num_of_edge)
+            selectServer = random.randrange(0, num_of_edge + 1)
             collaborationTarget = selectServer
 
         return collaborationTarget
