@@ -11,7 +11,11 @@
     },{
       "id" : 2,
       "mips" : 40000,
-      "percentage" : 80
+      "percentage" : 70
+    },{
+      "id" : 3,
+      "mips" : 40000,
+      "percentage" : 10
     }
   ],
   "mobile" : {

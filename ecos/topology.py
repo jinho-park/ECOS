@@ -14,8 +14,8 @@ class Topology:
         self.G = nx.Graph()
 
         # set bandwidth and propagation delay of link
-        for edge in config["link"]:
-            self.G.add_edge(edge["s"], edge["d"], BW=edge["BW"], PROPA=edge["PROPA"])
+        for edge in config["topology"]:
+            self.G.add_edge(edge["source"], edge["dest"], BW=int(edge["bandwidth"]), PROPA=int(edge["propagation"]))
 
     def get_path_by_dijkstra(self, src, dst):
         return nx.dijkstra_path(self.G, src, dst, weight="BW")

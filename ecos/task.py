@@ -34,6 +34,9 @@ class Task:
     def get_remain_size(self):
         return self.task_remain_size
 
+    def get_input_size(self):
+        return self.task_input_size
+
     def get_birth_time(self):
         return self.task_birth_time
 

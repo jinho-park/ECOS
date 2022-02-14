@@ -3,34 +3,34 @@
 "completed_task": {
 
 
-"total_completed_task": 3894,
+"total_completed_task": 1493,
 
 
 "completed_task_cloud": 0,
 
 
-"completed_task_edge": 3894,
+"completed_task_edge": 1493,
 
 
 "completed_task_mobile": 0
 
 },
 
-"service_time": 76.14538013355578,
+"service_time": -1091.6690928698738,
 
 "processing_delay": {
 
 
-"processing_time": 76.14538013355578,
+"processing_time": -1091.6690928698738,
 
 
-"processing_time_cloud_avg": 76.14538013355578,
+"processing_time_cloud_avg": -1091.6690928698738,
 
 
-"processing_time_edge_avg": 76.14538013355578,
+"processing_time_edge_avg": -1091.6690928698738,
 
 
-"processing_time_mobile_avg": 76.14538013355578
+"processing_time_mobile_avg": -1091.6690928698738
 
 },
 

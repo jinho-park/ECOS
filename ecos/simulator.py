@@ -3,6 +3,7 @@ from enum import Enum
 from ecos.event import Event
 from ecos.task_generator import Task_generator
 from ecos.log import Log
+from ecos.topology import Topology
 
 
 # 2022.01.07
@@ -55,25 +56,19 @@ class Simulator:
         self.task_look_up_table = list()
         self.task_generator = None
 
-
-
-    def initialize(self, configure, _network, _app, _num_of_edge):
+    def initialize(self, configure, _network, _app, _num_of_edge, policy):
         self.terminate_time = int(configure["simulation_time"]) * 60
-        self.orchestrator_policy = configure["orchestration_policy"]
+        self.orchestrator_policy = policy
         self.minNumOfMobileDevice = int(configure["min_num_of_mobile_device"])
         self.maxNumOfMobileDevice = int(configure["max_num_of_mobile_device"])
         self.mobileDeviceCounterSize = int(configure["mobile_device_counter"])
         self.sim_scenario = configure["simul_scenario"]
         self.numOfEdge = _num_of_edge
         self.network_properties = _network
+        # self.topology.link_configure(_network)
         self.task_look_up_table = _app
 
         return True
-
-    #minseon
-    #def get_cloud_id(self, _scenario_factory):
-    #    self.scenario_factory = _scenario_factory
-    #    CloudId = _scenario_factory.get_cloud_manager().get
 
     def set_simulation_factory(self, _scenario_factory):
         self.scenario_factory = _scenario_factory
@@ -81,12 +76,18 @@ class Simulator:
                          _scenario_factory.get_cloud_manager(),
                          _scenario_factory.get_device_manager()]
 
+    def get_scenario_factory(self):
+        return self.scenario_factory
+
     def set_mobile_device(self, _num_device):
         self.num_device = _num_device
         self.task_generator = Task_generator(_num_device, self.task_look_up_table)
 
     def get_warmup_period(self):
         return self.warmUpPeriod
+
+    def get_task_look_up_table(self):
+        return self.task_look_up_table
 
     def get_load_log_interval(self):
         return self.intervalToGetLoadLog
@@ -108,6 +109,9 @@ class Simulator:
 
     def get_num_of_edge(self):
         return self.numOfEdge
+
+    def get_orchestration_policy(self):
+        return self.orchestrator_policy
 
     def get_simulation_scenario(self):
         return self.sim_scenario
@@ -257,6 +261,8 @@ class Simulator:
                     # check each node
                     if msg["detail"]["source"] == -1:
                         self.scenario_factory.get_edge_manager().receive_task_from_device(evt)
+                    elif msg["detail"]["source"] == 0:
+                        self.scenario_factory.get_cloud_manager().receive_task(evt)
                     else:
                         self.scenario_factory.get_edge_manager().receive_task_from_edge(evt)
                 elif msg.get("task") == "check":
@@ -264,7 +270,7 @@ class Simulator:
                         device = self.entities[2].get_node_list()[msg["detail"]["id"]]
                         device.update_task_state(self.clock)
                     elif msg["detail"]["node"] == "edge":
-                        edge = self.entities[0].get_node_list()[msg["detail"]["id"]]
+                        edge = self.entities[0].get_node_list()[msg["detail"]["id"] - 1]
                         edge.update_task_state(self.clock)
                     elif msg["detail"]["node"] == "cloud":
                         cloud = self.entities[1].get_node_list()[msg["detail"]["id"]]
@@ -272,7 +278,62 @@ class Simulator:
             elif msg.get("network"):
                 #
                 if msg.get("network") == "transmission":
-                    self.scenario_factory.network_model.check()
+                    if msg["detail"]["type"] == 0:
+                        link = msg["detail"]["link"]
+                        link.update_send_task(evt.get_task())
+                        msgg = {
+                            "task": "processing",
+                            "detail": {
+                                "source": 0
+                            }
+                        }
+
+                        evtt = Event(msgg, evt.get_task(), 0)
+
+                        self.send_event(evtt)
+                    else:
+                        # link
+                        link = msg["detail"]["link"]
+                        link.update_send_task(evt.get_task())
+
+                        # update msg
+                        route_list = msg["detail"]["route"]
+                        route_list.remove(int(msg["detail"]["source"]))
+                        delay = 0
+
+                        if len(route_list) <= 1:
+                            typ = msg["detail"]["type"]
+                            msgg = {
+                                "task": "processing",
+                                "detail" : {
+                                    "source": typ,
+                                    "route": route_list
+                                }
+                            }
+
+                            et = Event(msgg, evt.get_task(), delay)
+
+                            self.send_event(et)
+                        else:
+                            source_edge = route_list[0]
+                            dest = route_list[1]
+                            updated_link = link
+
+                            # find link
+                            for lnk in self.scenario_factory.get_edge_manager().get_link_list():
+                                lnk_status = lnk.get_link()
+
+                                if source_edge == lnk_status[0] and dest == lnk_status[1]:
+                                    updated_link = lnk
+                                    delay = lnk.get_download_delay(evt.get_task())
+
+                            msg["detail"]["delay"] = delay
+                            msg["detail"]["link"] = updated_link
+
+                            et = Event(msg, evt.get_task(), delay)
+
+                            self.send_event(et)
+
             elif msg.get("simulation"):
                 if msg.get("simulation") == "progress":
                     #

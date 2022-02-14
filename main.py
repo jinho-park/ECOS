@@ -28,19 +28,20 @@ def main():
         net_data = json.load(f)
 
     simul = Simulator.get_instance()
-    if not simul.initialize(configure_data, net_data, app_data, len(device_data["edge"])):
-        print("Initialization Error")
-        exit(1)
 
     for mobile_device in range(int(configure_data["min_num_of_mobile_device"]),
                                int(configure_data["max_num_of_mobile_device"]),
                                int(configure_data["mobile_device_counter"])):
         for policy in configure_data["orchestration_policy"]:
+            if not simul.initialize(configure_data, net_data, app_data, len(device_data["edge"]), policy):
+                print("Initialization Error")
+                exit(1)
+
             outputFolderPath = result + "_" + policy + "_" + str(mobile_device)+".json"
             deviceManager = DeviceManager(device_data["mobile"], mobile_device, device_data["edge"])
             print("Device creating is completed")
-            edgeManager = EdgeManager(device_data["edge"])
-            cloudManager = CloudManager(device_data["cloud"], simul.get_clock())
+            edgeManager = EdgeManager(device_data["edge"], net_data)
+            cloudManager = CloudManager(device_data["cloud"], net_data["cloud"])
             orchestrator = Orchestrator(policy)
             scenario_factory = Custom_scenario_factory(deviceManager, edgeManager, cloudManager, orchestrator)
             simul.set_mobile_device(mobile_device)

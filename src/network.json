@@ -20,5 +20,9 @@
       "bandwidth": 100,
       "propagation": 10
     }
-  ]
+  ],
+  "cloud": {
+    "bandwidth" : 100,
+    "propagation": 100
+  }
 }
