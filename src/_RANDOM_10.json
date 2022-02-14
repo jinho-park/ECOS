@@ -1,0 +1,71 @@
+{
+
+"completed_task": {
+
+
+"total_completed_task": 1968,
+
+
+"completed_task_cloud": 785,
+
+
+"completed_task_edge": 1183,
+
+
+"completed_task_mobile": 0
+
+},
+
+"service_time": 62.377720493134426,
+
+"processing_delay": {
+
+
+"processing_time": 41.78095966313501,
+
+
+"processing_time_cloud_avg": 0,
+
+
+"processing_time_edge_avg": 41.78095966313501,
+
+
+"processing_time_mobile_avg": 0
+
+},
+
+"network_delay": {
+
+
+"network_time": 1.3833910907283358,
+
+
+"network_delay_gsm": 0,
+
+
+"network_delay_wan": 0.66557484884231,
+
+
+"network_delay_man": 0.7178162418860154,
+
+
+"network_delay_lan": 0
+
+},
+
+"buffering_delay": {
+
+
+"buffering_time": 19.21336973927113,
+
+
+"buffering_time_cloud": 0,
+
+
+"buffering_time_edge": 19.21336973927113,
+
+
+"buffering_time_mobile": 0
+
+}
+}
