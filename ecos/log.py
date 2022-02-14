@@ -13,11 +13,11 @@ class Log:
         return cls._instance
 
     def __init__(self):
-        # 0: Mobile, 1: Edge, 2: Cloud
+        # 2: Mobile, 1: Edge, 0: Cloud
         self.device_type = {
-            "Mobile": 0,
-            "Edge": 1,
-            "Cloud": 2
+            "mobile": 2,
+            "edge": 1,
+            "cloud": 0
         }
         # lan: mobile-edge, man: edge-edge, wan: edge-cloud
         # 0: gsm, 1: wan, 2: man, 3: lan
@@ -114,9 +114,9 @@ class Log:
             buffering_time_cloud_avg = np.divide(sum(self.buffering_time_cloud), len(self.buffering_time_cloud),
                                                  out=np.zeros_like(sum(self.buffering_time_cloud)),
                                                  where=len(self.buffering_time_cloud), casting="unsafe")
-            buffering_time_edge_avg = np.divide(sum(self.buffering_time_cloud), len(self.buffering_time_cloud),
-                                                out=np.zeros_like(sum(self.buffering_time_cloud)),
-                                                where=len(self.buffering_time_cloud), casting="unsafe")
+            buffering_time_edge_avg = np.divide(sum(self.buffering_time_edge), len(self.buffering_time_edge),
+                                                out=np.zeros_like(sum(self.buffering_time_edge)),
+                                                where=len(self.buffering_time_edge), casting="unsafe")
             buffering_time_mobile_avg = np.divide(sum(self.buffering_time_mobile), len(self.buffering_time_mobile),
                                                   out=np.zeros_like(sum(self.buffering_time_mobile)),
                                                   where=len(self.buffering_time_mobile), casting="unsafe")
@@ -160,17 +160,17 @@ class Log:
         # type = task.get_task_type()
 
         # processing time
-        self.processing_time_cloud.append(task.get_processing_time())
-        self.processing_time_edge.append(task.get_processing_time())
-        self.processing_time_mobile.append(task.get_processing_time())
-        processing_time = task.get_processing_time()
+        self.processing_time_cloud.append(task.get_processing_time(self.device_type["cloud"]))
+        self.processing_time_edge.append(task.get_processing_time(self.device_type["edge"]))
+        self.processing_time_mobile.append(task.get_processing_time(self.device_type["mobile"]))
+        processing_time = task.get_processing_time_sum()
         self.processing_time.append(processing_time)
 
         # buffering time
-        self.buffering_time_cloud.append((task.get_buffering_time()))
-        self.buffering_time_edge.append(task.get_buffering_time())
-        self.buffering_time_mobile.append(task.get_buffering_time())
-        buffering_time = task.get_buffering_time()
+        self.buffering_time_cloud.append((task.get_buffering_time(self.device_type["cloud"])))
+        self.buffering_time_edge.append(task.get_buffering_time(self.device_type["edge"]))
+        self.buffering_time_mobile.append(task.get_buffering_time(self.device_type["mobile"]))
+        buffering_time = task.get_buffering_time_sum()
         self.buffering_time.append(buffering_time)
 
         # network delay

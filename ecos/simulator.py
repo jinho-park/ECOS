@@ -141,7 +141,7 @@ class Simulator:
 
         # schedule the task
         for task in self.task_generator.get_task():
-            event = Event({"task": "create"}, task, task.get_start_time())
+            event = Event({"task": "create"}, task, task.get_birth_time())
             self.send_event(event)
 
         # schedule main object
@@ -278,6 +278,7 @@ class Simulator:
             elif msg.get("network"):
                 #
                 if msg.get("network") == "transmission":
+                    # send task to cloud (finish)
                     if msg["detail"]["type"] == 0:
                         link = msg["detail"]["link"]
                         link.update_send_task(evt.get_task())
@@ -288,10 +289,12 @@ class Simulator:
                             }
                         }
 
+                        evt.get_task().set_network_delay(self.get_clock(), 1)
                         evtt = Event(msgg, evt.get_task(), 0)
 
                         self.send_event(evtt)
                     else:
+                        # send task to edge
                         # link
                         link = msg["detail"]["link"]
                         link.update_send_task(evt.get_task())
@@ -311,6 +314,7 @@ class Simulator:
                                 }
                             }
 
+                            evt.get_task().set_network_delay(self.get_clock(), 2)
                             et = Event(msgg, evt.get_task(), delay)
 
                             self.send_event(et)
