@@ -110,4 +110,16 @@ class Edge:
         Log.get_instance().record_log(task)
         self.finish_list.remove(task)
 
+    def get_exec_list(self):
+        return self.exec_list
 
+    def get_waiting_list(self):
+        return self.waiting_list
+
+    def get_available_resource(self):
+        resourceUsage = 0
+
+        for task in self.exec_list:
+            resourceUsage += task.get_allocated_resource()
+
+        return resourceUsage

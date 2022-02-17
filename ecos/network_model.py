@@ -5,10 +5,10 @@ from ecos.simulator import Simulator
 class Network_model:
     def __init__(self, source, dest, _bandwidth, _propagation):
         self.link = [source, dest]
-        self.poissonMean = 0
+        self.poissonMean = 1
         self.bandwidth = _bandwidth
         self.propagation = _propagation
-        self.sumTaskSize = 0
+        self.sumTaskSize = 100
         self.send_task_list = list()
         self.send_task_type = list()
 
@@ -66,3 +66,6 @@ class Network_model:
     def update_send_task(self, task):
         self.send_task_list.remove(task)
         self.send_task_type[task.get_task_type() - 1] -= 1
+
+    def get_delay(self):
+        return self.calculate_MM1(self.propagation, self.bandwidth)

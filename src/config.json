@@ -3,6 +3,6 @@
   "min_num_of_mobile_device" : 10,
   "max_num_of_mobile_device" : 20,
   "mobile_device_counter" : 10,
-  "orchestration_policy" : ["RANDOM"],
+  "orchestration_policy" : ["A2C"],
   "simul_scenario" : "EDGE_ORCHEST"
 }
