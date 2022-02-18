@@ -17,8 +17,8 @@ class Agent:
         self.writer = tf.summary.create_file_writer('./results')
         self.epoch_step = epoch_step
 
-        self.alpha = tf.Variable(0.0, dtype=tf.float64)
-        self.target_entropy = -tf.constant(action_dim, dtype=tf.float64)
+        self.alpha = tf.Variable(0.0, dtype=tf.float32)
+        self.target_entropy = -tf.constant(action_dim, dtype=tf.float32)
         self.gamma = gamma
         self.polyak = polyak
 
@@ -28,21 +28,21 @@ class Agent:
         self.alpha_optimizer = tf.keras.optimizers.Adam(actor_lr_rate)
 
     def sample_action(self, current_state):
-        # current_state_ = tf.ragged.constant(current_state)
-        action, _ = self.policy.call(current_state)
+        current_state_ = np.array(current_state, ndmin=2)
+        action, _ = self.policy.call(current_state_)
 
         return action[0]
 
     def update_q_network(self, current_states, actions, rewards, next_states):
+        current_states_ = np.array(current_states, ndmin=2)
+        next_states_ = np.array(next_states, ndmin=2)
         with tf.GradientTape() as tape1:
-            print("===")
-            print(current_states)
-            q1 = self.q1.call(current_states, actions)
+            q1 = self.q1.call(current_states_, [actions])
 
-            pi_a, log_pi_a = self.policy.call(next_states)
+            pi_a, log_pi_a = self.policy.call(next_states_)
 
-            q1_target = self.target_q1.call(next_states, pi_a)
-            q2_target = self.target_q2.call(next_states, pi_a)
+            q1_target = self.target_q1.call(next_states_, pi_a)
+            q2_target = self.target_q2.call(next_states_, pi_a)
 
             min_q_target = tf.minimum(q1_target, q2_target)
 
@@ -52,12 +52,12 @@ class Agent:
             critic1_loss = tf.reduce_mean((q1 - y)**2)
 
         with tf.GradientTape() as tape2:
-            q2 = self.q2.call(current_states, actions)
+            q2 = self.q2.call(current_states_, [actions])
 
-            pi_a, log_pi_a = self.policy.call(next_states)
+            pi_a, log_pi_a = self.policy.call(next_states_)
 
-            q1_target = self.target_q1.call(next_states, pi_a)
-            q2_target = self.target_q2.call(next_states, pi_a)
+            q1_target = self.target_q1.call(next_states_, pi_a)
+            q2_target = self.target_q2.call(next_states_, pi_a)
 
             min_q_target = tf.minimum(q1_target, q2_target)
 

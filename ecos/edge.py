@@ -122,4 +122,4 @@ class Edge:
         for task in self.exec_list:
             resourceUsage += task.get_allocated_resource()
 
-        return resourceUsage
+        return self.CPU - resourceUsage
