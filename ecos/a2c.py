@@ -49,6 +49,7 @@ class Critic(tf.keras.Model):
         self.output_layer = tf.keras.layers.Dense(1)
 
     def call(self, state, action):
+        print(action)
         state_action = tf.concat([state, action], axis=1)
         a1 = self.dense1_layer(state_action)
         a2 = self.dense2_layer(a1)

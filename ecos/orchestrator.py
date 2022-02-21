@@ -35,16 +35,13 @@ class Orchestrator:
                 waiting_task_list.append(len(edge.get_waiting_list()))
                 available_computing_resource.append(edge.get_available_resource())
 
-            state = [task.get_remain_size()] + [task.get_task_deadline()] + \
+            state_ = [task.get_remain_size()] + [task.get_task_deadline()] + \
                                        available_computing_resource + waiting_task_list + \
                                        link_list +[source]
-            # state = np.array(data_list, ndmin=2)
+            state = np.array(state_, ndmin=2)
 
-            # state = ([task.get_remain_size()], [task.get_task_deadline()],
-            #                            available_computing_resource, waiting_task_list,
-            #                            link_list, [source])
             if self.action is not None:
-                self.agent.update_q_network(self.state, self.action, self.reward, state)
+                self.agent.train(self.state, self.action, self.reward, state)
 
             self.action = self.agent.sample_action(state)
             self.state = state

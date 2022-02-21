@@ -15,3 +15,4 @@ from ecos.task_generator import Task_generator
 from ecos.topology import Topology
 from ecos.agent import Agent
 from ecos.a2c import Actor, Critic
+from ecos.replaybuffer import ReplayBuffer

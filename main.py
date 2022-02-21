@@ -1,4 +1,6 @@
 import json
+import os
+
 from ecos import Simulator
 from ecos import Orchestrator
 from ecos import EdgeManager
@@ -7,13 +9,17 @@ from ecos import CloudManager
 from custom_scenario_factory import Custom_scenario_factory
 from ecos import Log
 
+
 def main():
     configure = "./src/config.json"
     device = "./src/device.json"
     app = "./src/application.json"
     net = "./src/network.json"
 
-    result = "./src/"
+    if not os.path.exists('./ecos_result'):
+        os.makedirs('./ecos_result')
+
+    result = "./ecos_result/"
 
     with open(configure, 'r') as f:
         configure_data = json.load(f)

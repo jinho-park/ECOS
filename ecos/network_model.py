@@ -57,9 +57,12 @@ class Network_model:
         lamda = 1 / self.poissonMean
         mu = bps / taskSize
 
-        result = -1 / (mu - lamda * (len(self.send_task_list)))
+        result = 1 / (mu - lamda * (len(self.send_task_list)))
 
-        result += (propagation_delay/1000)
+        if result < 0:
+            result = 0
+
+        result += propagation_delay
 
         return result
 

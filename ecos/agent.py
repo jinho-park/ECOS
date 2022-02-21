@@ -34,15 +34,13 @@ class Agent:
         return action[0]
 
     def update_q_network(self, current_states, actions, rewards, next_states):
-        current_states_ = np.array(current_states, ndmin=2)
-        next_states_ = np.array(next_states, ndmin=2)
         with tf.GradientTape() as tape1:
-            q1 = self.q1.call(current_states_, [actions])
+            q1 = self.q1.call(current_states, [actions])
 
-            pi_a, log_pi_a = self.policy.call(next_states_)
+            pi_a, log_pi_a = self.policy.call(next_states)
 
-            q1_target = self.target_q1.call(next_states_, pi_a)
-            q2_target = self.target_q2.call(next_states_, pi_a)
+            q1_target = self.target_q1.call(next_states, pi_a)
+            q2_target = self.target_q2.call(next_states, pi_a)
 
             min_q_target = tf.minimum(q1_target, q2_target)
 
@@ -52,12 +50,12 @@ class Agent:
             critic1_loss = tf.reduce_mean((q1 - y)**2)
 
         with tf.GradientTape() as tape2:
-            q2 = self.q2.call(current_states_, [actions])
+            q2 = self.q2.call(current_states, [actions])
 
-            pi_a, log_pi_a = self.policy.call(next_states_)
+            pi_a, log_pi_a = self.policy.call(next_states)
 
-            q1_target = self.target_q1.call(next_states_, pi_a)
-            q2_target = self.target_q2.call(next_states_, pi_a)
+            q1_target = self.target_q1.call(next_states, pi_a)
+            q2_target = self.target_q2.call(next_states, pi_a)
 
             min_q_target = tf.minimum(q1_target, q2_target)
 
@@ -67,6 +65,7 @@ class Agent:
             critic2_loss = tf.reduce_mean((q2 - y)**2)
 
         grads1 = tape1.gradient(critic1_loss, self.q1.trainable_variables)
+        print(grads1)
         self.critic_optimizer.apply_gradients(zip(grads1, self.q1.trainable_variables))
 
         grads2 = tape2.gradient(critic2_loss, self.q2.trainable_variables)
@@ -95,9 +94,8 @@ class Agent:
 
             actor_loss = tf.reduce_mean(soft_q)
 
-        variables = self.policy.trainable_variables()
-        grads = tape.gradient(actor_loss, variables)
-        self.actor_optimizer.apply_gradients(zip(grads, variables))
+        grads = tape.gradient(actor_loss, self.policy.trainable_variables)
+        self.actor_optimizer.apply_gradients(zip(grads, self.policy.trainable_variables))
 
         with self.writer.as_default():
             for grad, var in zip(grads, self.q1.trainable_variables):
@@ -107,7 +105,7 @@ class Agent:
         return actor_loss
 
     def update_alpha(self, current_states):
-        with tf.GradientTape as tape:
+        with tf.GradientTape() as tape:
             pi_a, log_pi_a = self.policy.call(current_states)
 
             alpha_loss = tf.reduce_mean(- self.alpha*(log_pi_a + self.target_entropy))
