@@ -9,10 +9,10 @@ class Agent:
                  critic_lr_rate=0.001, gamma=0.99,
                  polyak=0.995):
         self.policy = a2c.Actor(action_dim)
-        self.q1 = a2c.Critic()
-        self.q2 = a2c.Critic()
-        self.target_q1 = a2c.Critic()
-        self.target_q2 = a2c.Critic()
+        self.q1 = a2c.Critic(action_dim)
+        self.q2 = a2c.Critic(action_dim)
+        self.target_q1 = a2c.Critic(action_dim)
+        self.target_q2 = a2c.Critic(action_dim)
 
         self.writer = tf.summary.create_file_writer('./results')
         self.epoch_step = epoch_step
@@ -65,7 +65,6 @@ class Agent:
             critic2_loss = tf.reduce_mean((q2 - y)**2)
 
         grads1 = tape1.gradient(critic1_loss, self.q1.trainable_variables)
-        print(grads1)
         self.critic_optimizer.apply_gradients(zip(grads1, self.q1.trainable_variables))
 
         grads2 = tape2.gradient(critic2_loss, self.q2.trainable_variables)

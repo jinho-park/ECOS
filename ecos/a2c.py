@@ -42,23 +42,36 @@ class Actor(tf.keras.Model):
 
 
 class Critic(tf.keras.Model):
-    def __init__(self):
+    def __init__(self, act_dim):
         super().__init__()
-        self.dense1_layer = tf.keras.layers.Dense(32, activation=tf.nn.relu)
-        self.dense2_layer = tf.keras.layers.Dense(32, activation=tf.nn.relu)
-        self.output_layer = tf.keras.layers.Dense(1)
+        self.dense1_layer_v = tf.keras.layers.Dense(32, activation=tf.nn.relu)
+        self.dense2_layer_v = tf.keras.layers.Dense(32, activation=tf.nn.relu)
+        self.output_layer_v = tf.keras.layers.Dense(1)
+
+        self.dense1_layer_a = tf.keras.layers.Dense(32, activation=tf.nn.relu)
+        self.dense2_layer_a = tf.keras.layers.Dense(32, activation=tf.nn.relu)
+        self.output_layer_a = tf.keras.layers.Dense(act_dim)
 
     def call(self, state, action):
-        print(action)
+        v1 = self.dense1_layer_v(state)
+        v2 = self.dense2_layer_v(v1)
+        value = self.output_layer_v(v2)
+
         state_action = tf.concat([state, action], axis=1)
-        a1 = self.dense1_layer(state_action)
-        a2 = self.dense2_layer(a1)
-        q = self.output_layer(a2)
+        a1 = self.dense1_layer_a(state_action)
+        a2 = self.dense2_layer_a(a1)
+        adv = self.output_layer_a(a2)
+
+        q_ = value + (adv - tf.reduce_mean(adv))
+        q = tf.math.reduce_max(q_)
 
         return q
 
     @property
     def trainable_variables(self):
-        return self.dense1_layer.trainable_variables + \
-            self.dense2_layer.trainable_variables + \
-            self.output_layer.trainable_variables
+        return self.dense1_layer_v.trainable_variables + \
+            self.dense2_layer_v.trainable_variables + \
+            self.output_layer_v.trainable_variables + \
+            self.dense1_layer_a.trainable_variables + \
+            self.dense2_layer_a.trainable_variables + \
+            self.output_layer_a.trainable_variables
