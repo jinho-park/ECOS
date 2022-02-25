@@ -35,7 +35,7 @@ class Agent:
 
     def update_q_network(self, current_states, actions, rewards, next_states):
         with tf.GradientTape() as tape1:
-            q1 = self.q1.call(current_states, [actions])
+            q1 = self.q1.call(current_states, actions)
 
             pi_a, log_pi_a = self.policy.call(next_states)
 
@@ -50,7 +50,7 @@ class Agent:
             critic1_loss = tf.reduce_mean((q1 - y)**2)
 
         with tf.GradientTape() as tape2:
-            q2 = self.q2.call(current_states, [actions])
+            q2 = self.q2.call(current_states, actions)
 
             pi_a, log_pi_a = self.policy.call(next_states)
 

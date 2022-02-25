@@ -21,13 +21,10 @@ class Edge:
 
     def task_processing(self, task):
         # calculate available resource
-        resourceUsage = 0
-        for task in self.exec_list:
-            resourceUsage += task.get_allocated_resource()
 
-        if self.CPU - resourceUsage > 0:
-            requiredResource = task.get_remain_size() / task.get_task_deadline()
-            task.set_allocated_resource(requiredResource)
+        if len(self.exec_list) == 0 or len(self.waiting_list) < 1:
+            task.set_allocated_resource(self.CPU)
+            expected_finish_time = task.get_remain_size() / self.CPU
             self.exec_list.append(task)
             msg = {
                 "task": "check",
@@ -36,7 +33,7 @@ class Edge:
                     "id": self.id
                 }
             }
-            event = Event(msg, None, task.get_task_deadline())
+            event = Event(msg, None, expected_finish_time)
             Simulator.get_instance().send_event(event)
         else:
             self.waiting_list.append(task)
@@ -60,23 +57,12 @@ class Edge:
                 self.finish_task(task)
 
         if len(self.waiting_list) > 0:
-            resourceUsage = 0
-
-            for task in self.exec_list:
-                resourceUsage += task.get_allocated_resource()
-
             for task in self.waiting_list:
-                if resourceUsage <= 0:
+                if len(self.exec_list) > 0:
                     break
 
-                requiredResource = task.get_remain_size() / task.get_task_deadline()
-
-                if requiredResource > resourceUsage:
-                    break
-
-                task.set_allocated_resource(requiredResource)
+                task.set_allocated_resource(self.CPU)
                 task.set_buffering_time(Simulator.get_instance().get_clock(), 1)
-                resourceUsage -= requiredResource
                 self.exec_list.append(task)
                 self.waiting_list.remove(task)
 
