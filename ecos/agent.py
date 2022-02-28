@@ -130,6 +130,7 @@ class Agent:
 
         return critic1_loss, critic2_loss, actor_loss, alpha_loss
 
+    @tf.function
     def update_weights(self):
         for theta_target, theta in zip(self.target_q1.trainable_variables, self.q1.trainable_variables):
             theta_target = self.polyak * theta_target + (1 - self.polyak) * theta

@@ -6,16 +6,28 @@
   "edge" : [
     {
       "id" : 1,
-      "mips" : 40000,
-      "percentage" : 20
+      "mips" : 10000,
+      "percentage" : 5
     },{
       "id" : 2,
-      "mips" : 40000,
-      "percentage" : 70
+      "mips" : 10000,
+      "percentage" : 40
     },{
       "id" : 3,
-      "mips" : 40000,
+      "mips" : 10000,
       "percentage" : 10
+    },{
+      "id" : 4,
+      "mips" : 10000,
+      "percentage" : 15
+    },{
+      "id" : 5,
+      "mips" : 10000,
+      "percentage" : 10
+    },{
+      "id" : 6,
+      "mips" : 10000,
+      "percentage" : 20
     }
   ],
   "mobile" : {

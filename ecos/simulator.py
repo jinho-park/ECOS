@@ -17,7 +17,10 @@ class Simulator:
         return cls._instance
 
     def __init__(self):
+        # all event excluded task creation
         self.taskQueue = list()
+        # task create
+        self.eventQueue = list()
         self.terminate_time = 0
 
         # type configuration
@@ -142,15 +145,17 @@ class Simulator:
         # schedule the task
         for task in self.task_generator.get_task():
             event = Event({"task": "create"}, task, task.get_birth_time())
-            self.send_event(event)
+            self.task_event(event)
+
+        self.eventQueue = sorted(self.eventQueue, key=lambda evt: evt.get_time())
 
         # schedule main object
         # progress
-        event = Event({"simulation": "progress"}, None, self.terminate_time/100)
+        event = Event({"simulation": "progress"}, None, round(self.terminate_time/100))
         self.send_event(event)
 
         # stop
-        event = Event({"simulation": "stop"}, None, self.terminate_time)
+        event = Event({"simulation": "stop"}, None, round(self.terminate_time))
         self.send_event(event)
 
         while True:
@@ -191,9 +196,9 @@ class Simulator:
         #
         queue_empty = False
 
-        for item in self.entities:
-            if item.get_state() == self.entity_state.RUNNABLE:
-                item.run()
+        # for item in self.entities:
+        #     if item.get_state() != self.entity_state.RUNNABLE:
+        #         item.run()
 
         if len(self.taskQueue) > 0:
             event_list = list()
@@ -207,23 +212,37 @@ class Simulator:
                 if i.get_time() < time:
                     time = i.get_time()
                     event = i
+            time_ = self.eventQueue[0].get_time() - self.clock
+            if len(self.eventQueue) > 0 and time_ < event.get_time():
+                event = self.eventQueue[0]
+                self.eventQueue.remove(event)
+                event.update_time(event.get_time() - self.clock)
+                event_list.append(event)
+                if event.get_time() < 0:
+                    print("time error")
+                    print("event time: ", event.get_time(), " clock: ", self.clock)
+                    exit(1)
+            else:
+                event_list.append(event)
 
-            event_list.append(event)
+                for i in self.taskQueue:
+                    if event == i:
+                        continue
 
-            for i in self.taskQueue:
-                if event == i:
-                    continue
+                    if time == i.get_time():
+                        event_list.append(i)
 
-                if time == i.get_time():
-                    event_list.append(i)
-
-            # remove event in task queue
-            for item in event_list:
-                self.taskQueue.remove(item)
+                # remove event in task queue
+                for item in event_list:
+                    self.taskQueue.remove(item)
 
             for item in self.taskQueue:
                 event_time = item.get_time()
                 update_time = event_time - event.get_time()
+
+                if update_time > 100000:
+                    self.taskQueue.remove(item)
+                    continue
 
                 if update_time < 0:
                     update_time = 0
@@ -233,6 +252,12 @@ class Simulator:
             # print(event.get_time())
             self.clock += event.get_time()
             self.process_event(event_list)
+        elif len(self.eventQueue) > 0:
+            event = self.eventQueue[0]
+            self.eventQueue.remove(event)
+            event.update_time(self.clock - event.get_time())
+            self.clock += event.get_time()
+            self.process_event(event)
         else:
             queue_empty = True
             self.running = False
@@ -326,13 +351,15 @@ class Simulator:
                             # find link
                             for lnk in self.scenario_factory.get_edge_manager().get_link_list():
                                 lnk_status = lnk.get_link()
+                                set = [source_edge, dest]
 
-                                if source_edge == lnk_status[0] and dest == lnk_status[1]:
+                                if sorted(set) == sorted(lnk_status):
                                     updated_link = lnk
                                     delay = lnk.get_download_delay(evt.get_task())
 
                             msg["detail"]["delay"] = delay
                             msg["detail"]["link"] = updated_link
+                            msg["detail"]["source"] = source_edge
 
                             et = Event(msg, evt.get_task(), delay)
 
@@ -348,16 +375,20 @@ class Simulator:
                     else:
                         print(".", end='')
 
-                    if self.clock <= self.terminate_time:
-                        evt.update_time(self.terminate_time/100)
+                    if self.clock < self.terminate_time:
+                        evt.update_time(round(self.terminate_time/100))
                         self.send_event(evt)
 
                 elif msg.get("simulation") == "stop":
                     #
                     self.finish_simulation()
 
+    def task_event(self, task_list):
+        self.eventQueue.append(task_list)
+
     def send_event(self, event):
         #
+        event.update_time(round(event.get_time(), 6))
         self.taskQueue.append(event)
 
     def my_enum(*sequential, **named):

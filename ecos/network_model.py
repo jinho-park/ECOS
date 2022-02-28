@@ -52,8 +52,9 @@ class Network_model:
 
     def calculate_MM1(self, propagation_delay, bandwidth):
         taskSize = self.sumTaskSize * 1000 # KB to Byte
+        propagation_delay_ = propagation_delay / 1000
 
-        bps = bandwidth * 1000 / 8
+        bps = bandwidth * 1000000 / 8
         lamda = 1 / self.poissonMean
         mu = bps / taskSize
 
@@ -62,9 +63,9 @@ class Network_model:
         if result < 0:
             result = 0
 
-        result += propagation_delay
+        result += propagation_delay_
 
-        return result
+        return round(result, 6)
 
     def update_send_task(self, task):
         self.send_task_list.remove(task)

@@ -3,10 +3,6 @@ from abc import *
 
 class Scenario_factory(metaclass=ABCMeta):
     @abstractmethod
-    def get_orchestrator(self):
-        pass
-
-    @abstractmethod
     def get_device_manager(self):
         pass
 

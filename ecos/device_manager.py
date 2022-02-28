@@ -74,10 +74,23 @@ class DeviceManager:
     def get_offload_target(self, task):
         # if task offloading is decision in mobile device,
         # offloading policy operates in this function
-        sending_target = random.randrange(1, Simulator.get_instance().get_num_of_edge())
+        sending_target = -1
+        percentage_sum = 0
+        random_value = random.randrange(0, 100)
+
+        for i in range(len(self.edge_props)):
+            percentage_sum += self.edge_props[i]["percentage"]
+
+            if random_value < percentage_sum:
+                sending_target = i + 1
+                break
+
         if sending_target == -1:
             print("Device connection is error")
             exit(1)
+
+        task.set_status(0)
+        task.set_source_node(sending_target)
 
         msg = {
             "task" : "processing",

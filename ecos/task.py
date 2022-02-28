@@ -23,6 +23,10 @@ class Task:
         self.network_delay = [0, 0, 0, 0]
         self.finish_node = 0
         self.allocated_resource = 0
+        self.source_node = -1
+        self.processing_node = -1
+        # 0: create, 1: transmission, 2: processing
+        self.status = 0
 
     def create_task(self, _time):
         self.task_birth_time = _time
@@ -68,7 +72,7 @@ class Task:
         self.buffering_time[type] = buff - sum(self.network_delay) - self.task_birth_time
 
     def set_processing_time(self, proc, type):
-        self.processing_time[type] = proc - sum(self.network_delay) - sum(self.network_delay) - self.task_birth_time
+        self.processing_time[type] = proc - sum(self.network_delay) - sum(self.buffering_time) - self.task_birth_time
 
     def set_network_delay(self, value, type):
         self.network_delay[type] = value - self.task_birth_time
@@ -105,3 +109,12 @@ class Task:
 
     def get_allocated_resource(self):
         return self.allocated_resource
+
+    def set_processing_node(self, node_id):
+        self.processing_node = node_id
+
+    def set_source_node(self, node_id):
+        self.source_node = node_id
+
+    def set_status(self, status):
+        self.status = status

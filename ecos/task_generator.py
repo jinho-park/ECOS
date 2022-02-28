@@ -52,7 +52,7 @@ class Task_generator:
 
                 if virtualTime > activePeriodStartTime + activePeriod:
                     activePeriodStartTime = activePeriodStartTime + activePeriod + idlePeriod
-                    virtualTime = activePeriodStartTime
+                    virtualTime = round(activePeriodStartTime, 6)
                     continue
 
                 t = Task(self.task_prop["task"][randomTaskType-1], self.taskId)

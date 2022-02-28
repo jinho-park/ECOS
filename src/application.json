@@ -2,17 +2,26 @@
   "task" : [{
     "type" : 1,
     "deadline" : 100,
-    "percentage" : 40,
-    "inputSize" : 1000,
+    "percentage" : 30,
+    "inputSize" : 600,
     "outputSize" : 500,
     "generationRate" : 2,
     "activePeriod" : 40,
     "idlePeriod" : 20
   },{
     "type" : 2,
-    "deadline" : 100,
-    "percentage" : 60,
-    "inputSize" : 1000,
+    "deadline" : 300,
+    "percentage" : 50,
+    "inputSize" : 700,
+    "outputSize" : 500,
+    "generationRate" : 2,
+    "activePeriod" : 40,
+    "idlePeriod" : 20
+  },{
+    "type" : 3,
+    "deadline" : 200,
+    "percentage" : 20,
+    "inputSize" : 800,
     "outputSize" : 500,
     "generationRate" : 2,
     "activePeriod" : 40,

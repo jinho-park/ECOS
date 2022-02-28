@@ -22,7 +22,9 @@ class Edge:
     def task_processing(self, task):
         # calculate available resource
 
-        if len(self.exec_list) == 0 or len(self.waiting_list) < 1:
+        task.set_status(2)
+
+        if len(self.exec_list) == 0 and len(self.waiting_list) < 1:
             task.set_allocated_resource(self.CPU)
             expected_finish_time = task.get_remain_size() / self.CPU
             self.exec_list.append(task)
@@ -34,7 +36,10 @@ class Edge:
                 }
             }
             event = Event(msg, None, expected_finish_time)
+            self.previous_time = Simulator.get_instance().get_clock()
             Simulator.get_instance().send_event(event)
+            if expected_finish_time > 10:
+                print("error finish time")
         else:
             self.waiting_list.append(task)
 
@@ -43,12 +48,13 @@ class Edge:
 
         for task in self.exec_list:
             allocatedResource = task.get_allocated_resource()
-            remainSize = task.get_remain_size() - (allocatedResource * timeSpen)
+            remainSize = round(task.get_remain_size() - (allocatedResource * timeSpen), 6)
             task.set_remain_size(remainSize)
             task.set_finish_node(1)
 
         if len(self.exec_list) == 0 and len(self.waiting_list) == 0:
             self.previous_time = simulationTime
+            return
 
         for task in self.exec_list:
             if task.get_remain_size() <= 0:
@@ -66,6 +72,7 @@ class Edge:
                 self.exec_list.append(task)
                 self.waiting_list.remove(task)
 
+        if len(self.exec_list) > 0:
             # add event
             nextEvent = 99999999999999
             for task in self.exec_list:
@@ -73,7 +80,7 @@ class Edge:
                 estimatedFinishTime = (remainingLength / task.get_allocated_resource())
 
                 if estimatedFinishTime < 1:
-                    estimatedFinishTime = 1
+                    estimatedFinishTime = round(estimatedFinishTime, 6)
 
                 if estimatedFinishTime < nextEvent:
                     nextEvent = estimatedFinishTime
@@ -87,6 +94,8 @@ class Edge:
             }
             event = Event(msg, None, nextEvent)
             Simulator.get_instance().send_event(event)
+
+        self.previous_time = simulationTime
 
     def finish_task(self, task):
         # 1 means edge node

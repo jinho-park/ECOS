@@ -31,7 +31,7 @@ class Actor(tf.keras.Model):
         log_pi = log_pi_ - tf.reduce_sum(tf.math.log(1 - action**2 + EPSILON), axis=1,
                                          keepdims=True)
 
-        return action, log_pi
+        return mu, log_pi
 
     @property
     def trainable_variables(self):
