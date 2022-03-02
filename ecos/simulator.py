@@ -300,6 +300,12 @@ class Simulator:
                     elif msg["detail"]["node"] == "cloud":
                         cloud = self.entities[1].get_node_list()[msg["detail"]["id"]]
                         cloud.update_task_state(self.clock)
+                elif msg.get("task") == "offloading":
+                    if msg["detail"]["node"] == "edge":
+                        edge = self.entities[0]
+                        edge.offloading()
+
+                    self.send_event(evt)
             elif msg.get("network"):
                 #
                 if msg.get("network") == "transmission":

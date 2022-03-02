@@ -10,6 +10,8 @@ import numpy as np
 class Orchestrator:
     def __init__(self, _policy, id):
         self.policy = _policy
+
+        # RL training
         self.agent = Agent(Simulator.get_instance().get_num_of_edge())
         self.state = np.zeros(6)
         self.action = None
@@ -18,6 +20,7 @@ class Orchestrator:
         self.epoch = 1
         self.replay = ReplayBuffer(21, Simulator.get_instance().get_num_of_edge())
         self.file_path = './ecos_result/model_' + str(id) + "/"
+        self.training_enable = False
 
         if len(os.listdir(self.file_path)) > 0:
             self.agent.policy.load_weights(self.file_path)
@@ -31,6 +34,9 @@ class Orchestrator:
             selectServer = random.randrange(1, num_of_edge + 1)
             collaborationTarget = selectServer
         elif self.policy == "A2C":
+            if not self.training_enable:
+                self.training_enable = True
+
             available_computing_resource = []
             waiting_task_list = []
             delay_list = []
@@ -49,8 +55,9 @@ class Orchestrator:
 
                     for link in link_list:
                         link_status = link.get_link()
+                        set = [route[idx], route[idx + 1]]
 
-                        if route[idx] == link_status[0] and route[idx + 1] == link_status[1]:
+                        if sorted(set) == sorted(link_status):
                             delay += link.get_delay()
                             break
 
@@ -66,27 +73,15 @@ class Orchestrator:
             state = np.array(state_, ndmin=2)
 
             if self.action is not None:
-                self.agent.train(self.state, self.action, self.reward, state)
-
                 self.replay.store(self.state, self.action, self.reward, state)
-
-                for epc in range(self.epoch):
-                    if epc > 0 and epc % 10 == 0:
-                        current_state, actions, rewards, next_state = self.replay.fetch_sample(num_samples=128)
-
-                        critic1_loss, critic2_loss, actor_loss, alpha_loss = self.agent.train(current_state, actions,
-                                                                                              rewards, next_state)
-
-                self.agent.update_weights()
-                self.agent.policy.save_weights(self.file_path)
-
                 # need to add summary
 
             # edit
-            action_ = self.agent.sample_action(state)
-            self.action = np.array(action_, ndmin=2)
+            action = self.agent.sample_action(state)
+            self.action = np.array(action, ndmin=2)
             self.state = state
-            action_sample = int(action_.numpy()[0])
+            action_sample = np.random.choice(Simulator.get_instance().get_num_of_edge(),
+                                             p=np.squeeze(action))
             collaborationTarget = action_sample + 1
 
             # estimate reward
@@ -101,7 +96,8 @@ class Orchestrator:
             for dest in route:
                 for link in edge_manager.get_link_list():
                     link_status = link.get_link()
-                    if source_ == link_status[0] and dest == link_status[1]:
+                    set = [source_, dest]
+                    if sorted(set) == sorted(link_status):
                         delay = link.get_delay()
 
                         transmission_time += delay
@@ -120,7 +116,7 @@ class Orchestrator:
             self.epoch += 1
 
             print("=======================")
-            print("source: ", source)
+            print("source: ", source, " target: ", collaborationTarget)
             print("reward: ", self.reward)
             print("cumulative reward: ", self.cumulative_reward)
 
@@ -128,3 +124,15 @@ class Orchestrator:
 
     def save_weight(self):
         self.agent.policy.save_weights(self.file_path)
+
+    def training(self):
+        if self.training_enable:
+            for epc in range(self.epoch):
+                if epc > 0 and epc % 10 == 0:
+                    current_state, actions, rewards, next_state = self.replay.fetch_sample(num_samples=32)
+
+                    critic1_loss, critic2_loss, actor_loss, alpha_loss = self.agent.train(current_state, actions,
+                                                                                          rewards, next_state)
+
+            self.agent.update_weights()
+            self.agent.policy.save_weights(self.file_path)

@@ -116,5 +116,8 @@ class Task:
     def set_source_node(self, node_id):
         self.source_node = node_id
 
+    def get_source_node(self):
+        return self.source_node
+
     def set_status(self, status):
         self.status = status

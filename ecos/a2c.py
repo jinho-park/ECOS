@@ -8,37 +8,22 @@ class Actor(tf.keras.Model):
     def __init__(self, action_dim):
         super().__init__()
         self.action_dim = action_dim
-        self.dense1_layer = tf.keras.layers.Dense(128, activation=tf.nn.relu)
-        self.dense2_layer = tf.keras.layers.Dense(128, activation=tf.nn.relu)
-        self.mean_layer = tf.keras.layers.Dense(self.action_dim, activation='softmax')
-        self.stdev_layer = tf.keras.layers.Dense(self.action_dim, activation='softmax')
+        self.dense1_layer = tf.keras.layers.Dense(128, activation="relu")
+        self.dense2_layer = tf.keras.layers.Dense(128, activation="relu")
+        self.mean_layer = tf.keras.layers.Dense(self.action_dim, activation="softmax")
 
     def call(self, state):
         a1 = self.dense1_layer(state)
         a2 = self.dense2_layer(a1)
-        mu = self.mean_layer(a2)
+        action = self.mean_layer(a2)
 
-        log_sigma = self.stdev_layer(a2)
-        sigma = tf.exp(log_sigma)
-
-        dist = tfp.distributions.Normal(mu, sigma)
-        action_ = dist.sample()
-
-        action = tf.tanh(action_)
-
-        log_pi_ = dist.log_prob(action_)
-
-        log_pi = log_pi_ - tf.reduce_sum(tf.math.log(1 - action**2 + EPSILON), axis=1,
-                                         keepdims=True)
-
-        return mu, log_pi
+        return action
 
     @property
     def trainable_variables(self):
         return self.dense1_layer.trainable_variables + \
             self.dense2_layer.trainable_variables + \
-            self.mean_layer.trainable_variables + \
-            self.stdev_layer.trainable_variables
+            self.mean_layer.trainable_variables
 
 
 class Critic(tf.keras.Model):

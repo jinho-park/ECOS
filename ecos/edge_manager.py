@@ -17,6 +17,7 @@ class EdgeManager:
         # 1 : FINISHED, 2 : RUNNABLE
         self.state = 1
         self.orchestrator = None
+        self.waiting_task = list()
 
     #minseon
     def get_node_list(self):
@@ -30,6 +31,16 @@ class EdgeManager:
             self.state = 2
 
         self.create_edge_server()
+
+        msg = {
+            "task": "offloading",
+            "detail": {
+                "node": "edge"
+            }
+        }
+
+        event = Event(msg, None, 2)
+        Simulator.get_instance().send_event(event)
 
         return True
 
@@ -69,74 +80,81 @@ class EdgeManager:
         node.task_processing(event.get_task())
 
     def receive_task_from_device(self, event):
-        msg = event.get_message()
-        source_edge = int(msg["detail"]["dest"])
+        #
         task = event.get_task()
-        dest = self.node_list[source_edge - 1].get_policy().offloading_target(task, source_edge)
-        task.set_processing_node(dest)
-        msg["detail"]["id"] = 1
-        task.set_status(1)
+        self.waiting_task.append(task)
 
-        # calculate network delay
-        # network module does not complete
-        if dest == source_edge:
-            msg = {
-                "network" : "transmission",
-                "detail": {
-                    "source" : -1,
-                    "route" : [source_edge]
-                }
-            }
+    def offloading(self):
+        for task in self.waiting_task:
+            source_edge = task.get_source_node()
+            node = self.node_list[source_edge - 1]
+            dest = node.get_policy().offloading_target(task, source_edge)
+            task.set_processing_node(dest)
+            task.set_status(1)
 
-            event = Event(msg, task, 0)
-            self.receive_task_from_edge(event)
-        elif dest == 0:
-            # collaboration target is cloud
-            cloudManager = Simulator.get_instance().get_scenario_factory().get_cloud_manager()
-            network = cloudManager.get_cloud_network()
-            delay = network.get_download_delay(task)
-
-            msg = {
-                "network": "transmission",
-                "detail": {
-                    "source": source_edge,
-                    "type": 0,
-                    "link": network,
-                    "delay": delay
-                }
-            }
-
-            evt = Event(msg, task, delay)
-
-            Simulator.get_instance().send_event(evt)
-        else:
-            route_list = self.edge_network.get_path_by_dijkstra(source_edge, dest)
-            dest = route_list[1]
-            set = [source_edge, dest]
-            delay = 0
-
-            # find link
-            for link in self.edge_link_list:
-                link_status = link.get_link()
-
-                if sorted(set) == sorted(link_status):
-                    delay = link.get_download_delay(task)
-
-                    msg = {
-                        "network": "transmission",
-                        "detail": {
-                            "source": source_edge,
-                            "type": 1,
-                            "link": link,
-                            "route": route_list,
-                            "delay": delay,
-                        }
+            # calculate network delay
+            # network module does not complete
+            if dest == source_edge:
+                msg = {
+                    "network" : "transmission",
+                    "detail": {
+                        "source" : -1,
+                        "route" : [source_edge]
                     }
+                }
 
-                    evt = Event(msg, event.get_task(), delay)
+                event = Event(msg, task, 0)
+                self.receive_task_from_edge(event)
+            elif dest == 0:
+                # collaboration target is cloud
+                cloudManager = Simulator.get_instance().get_scenario_factory().get_cloud_manager()
+                network = cloudManager.get_cloud_network()
+                delay = network.get_download_delay(task)
 
-                    Simulator.get_instance().send_event(evt)
-                    break
+                msg = {
+                    "network": "transmission",
+                    "detail": {
+                        "source": source_edge,
+                        "type": 0,
+                        "link": network,
+                        "delay": delay
+                    }
+                }
+
+                evt = Event(msg, task, delay)
+
+                Simulator.get_instance().send_event(evt)
+            else:
+                route_list = self.edge_network.get_path_by_dijkstra(source_edge, dest)
+                dest = route_list[1]
+                set = [source_edge, dest]
+                delay = 0
+
+                # find link
+                for link in self.edge_link_list:
+                    link_status = link.get_link()
+
+                    if sorted(set) == sorted(link_status):
+                        delay = link.get_download_delay(task)
+
+                        msg = {
+                            "network": "transmission",
+                            "detail": {
+                                "source": source_edge,
+                                "type": 1,
+                                "link": link,
+                                "route": route_list,
+                                "delay": delay,
+                            }
+                        }
+
+                        evt = Event(msg, task, delay)
+
+                        Simulator.get_instance().send_event(evt)
+                        break
+
+        for node in self.node_list:
+            node.get_policy().training()
 
     def get_network(self):
         return self.edge_network
