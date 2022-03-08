@@ -1,11 +1,13 @@
 import numpy as np
 import tensorflow as tf
+import os
 from ecos import a2c
-from ecos.simulator import Simulator
+import ray
 
 
+@ray.remote
 class Agent:
-    def __init__(self, action_dim, epoch_step = 0, actor_lr_rate=0.0001,
+    def __init__(self, action_dim, file_path, epoch_step=0, actor_lr_rate=0.0001,
                  critic_lr_rate=0.001, gamma=0.99,
                  polyak=0.995):
         self.policy = a2c.Actor(action_dim)
@@ -15,6 +17,7 @@ class Agent:
         self.target_q2 = a2c.Critic(action_dim)
 
         self.writer = tf.summary.create_file_writer('./results')
+        self.file_path = file_path
         self.epoch_step = epoch_step
 
         self.alpha = tf.Variable(0.0, dtype=tf.float32)
@@ -26,6 +29,9 @@ class Agent:
         self.critic_optimizer = tf.keras.optimizers.Adam(critic_lr_rate)
         self.critic2_optimizer = tf.keras.optimizers.Adam(critic_lr_rate)
         self.alpha_optimizer = tf.keras.optimizers.Adam(actor_lr_rate)
+
+        if len(os.listdir(self.file_path)) > 0:
+            self.policy.load_weights(self.file_path)
 
     def sample_action(self, current_state):
         current_state_ = np.array(current_state, ndmin=2)
@@ -133,3 +139,5 @@ class Agent:
             theta_target = self.polyak * theta_target + (1 - self.polyak) * theta
         for theta_target, theta in zip(self.target_q2.trainable_variables, self.q2.trainable_variables):
             theta_target = self.polyak * theta_target + (1 - self.polyak) * theta
+
+        self.policy.save_weights(self.file_path, save_format="tf")
