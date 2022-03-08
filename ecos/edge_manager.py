@@ -5,6 +5,9 @@ from ecos.orchestrator import Orchestrator
 from ecos.topology import Topology
 from ecos.network_model import Network_model
 
+import time
+import ray
+
 
 # 22.01.05
 class EdgeManager:
@@ -57,7 +60,7 @@ class EdgeManager:
     def create_edge_server(self):
         id = 1
         for i in range(len(self.edge_props)):
-            edge = Edge(id, self.edge_props[i], Orchestrator(Simulator.get_instance().get_orchestration_policy(), id), 0)
+            edge = Edge(id, self.edge_props[i], Orchestrator.remote(Simulator.get_instance().get_orchestration_policy(), id, Simulator), 0)
             id += 1
             self.node_list.append(edge)
 
@@ -88,7 +91,7 @@ class EdgeManager:
         for task in self.waiting_task:
             source_edge = task.get_source_node()
             node = self.node_list[source_edge - 1]
-            dest = node.get_policy().offloading_target(task, source_edge)
+            dest = ray.get(node.get_policy().offloading_target.remote(task, source_edge))
             task.set_processing_node(dest)
             task.set_status(1)
 
@@ -153,8 +156,18 @@ class EdgeManager:
                         Simulator.get_instance().send_event(evt)
                         break
 
+        processing_list = []
+        # for node in self.node_list:
+        #     policy = node.get_policy()
+        #     p = Process(target=policy.training)
+        #     processing_list.append(p)
+        #     p.start()
+        #
+        # for p in processing_list:
+        #     p.join()
         for node in self.node_list:
-            node.get_policy().training()
+            policy = node.get_policy()
+            policy.training.remote()
 
     def get_network(self):
         return self.edge_network

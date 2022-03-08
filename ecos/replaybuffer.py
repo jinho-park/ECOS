@@ -36,3 +36,6 @@ class ReplayBuffer:
         next_states_ = self.next_states[idx]
 
         return current_states_, actions_, rewards_, next_states_
+
+    def get_size(self):
+        return self.total_size

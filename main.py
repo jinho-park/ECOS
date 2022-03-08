@@ -9,6 +9,8 @@ from ecos import CloudManager
 from custom_scenario_factory import Custom_scenario_factory
 from ecos import Log
 
+from multiprocessing import Process
+
 
 def main():
     configure = "./src/config.json"
@@ -56,5 +58,7 @@ def main():
                 Log.get_instance().sim_start(outputFolderPath)
                 simul.start_simulator()
 
+
 if __name__ == '__main__':
     main()
+

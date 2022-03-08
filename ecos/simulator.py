@@ -377,9 +377,9 @@ class Simulator:
                     progress = int((self.clock * 100)/self.terminate_time)
 
                     if progress % 10 == 0:
-                        print(progress, end='')
-                    else:
-                        print(".", end='')
+                        print("Progress:", progress, end='')
+                    # else:
+                    #     print(".", end='')
 
                     if self.clock < self.terminate_time:
                         evt.update_time(round(self.terminate_time/100))

@@ -29,12 +29,12 @@ class Actor(tf.keras.Model):
 class Critic(tf.keras.Model):
     def __init__(self, act_dim):
         super().__init__()
-        self.dense1_layer_v = tf.keras.layers.Dense(32, activation=tf.nn.relu)
-        self.dense2_layer_v = tf.keras.layers.Dense(32, activation=tf.nn.relu)
+        self.dense1_layer_v = tf.keras.layers.Dense(32, activation="relu")
+        self.dense2_layer_v = tf.keras.layers.Dense(32, activation="relu")
         self.output_layer_v = tf.keras.layers.Dense(1)
 
-        self.dense1_layer_a = tf.keras.layers.Dense(32, activation=tf.nn.relu)
-        self.dense2_layer_a = tf.keras.layers.Dense(32, activation=tf.nn.relu)
+        self.dense1_layer_a = tf.keras.layers.Dense(32, activation="relu")
+        self.dense2_layer_a = tf.keras.layers.Dense(32, activation="relu")
         self.output_layer_a = tf.keras.layers.Dense(act_dim)
 
     def call(self, state, action):
@@ -47,8 +47,8 @@ class Critic(tf.keras.Model):
         a2 = self.dense2_layer_a(a1)
         adv = self.output_layer_a(a2)
 
-        q_ = value + (adv - tf.reduce_mean(adv))
-        q = tf.math.reduce_max(q_)
+        adv_ = tf.math.reduce_max(adv - tf.reduce_mean(adv))
+        q = value + adv_
 
         return q
 

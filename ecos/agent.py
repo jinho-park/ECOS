@@ -124,6 +124,9 @@ class Agent:
 
         return critic1_loss, critic2_loss, actor_loss, alpha_loss
 
+    def get_td_target(self, current_state):
+        q1 = self.q1.call()
+
     @tf.function
     def update_weights(self):
         for theta_target, theta in zip(self.target_q1.trainable_variables, self.q1.trainable_variables):

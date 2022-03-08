@@ -16,3 +16,5 @@ from ecos.topology import Topology
 from ecos.agent import Agent
 from ecos.a2c import Actor, Critic
 from ecos.replaybuffer import ReplayBuffer
+from ecos.per import PER
+from ecos.custom_buffer import Custom_PER
