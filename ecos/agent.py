@@ -16,7 +16,6 @@ class Agent:
         self.target_q1 = a2c.Critic(action_dim)
         self.target_q2 = a2c.Critic(action_dim)
 
-        self.writer = tf.summary.create_file_writer('./results')
         self.file_path = file_path
         self.epoch_step = epoch_step
 
@@ -133,7 +132,7 @@ class Agent:
     def get_td_target(self, current_state):
         q1 = self.q1.call()
 
-    @tf.function
+    # @tf.function
     def update_weights(self):
         for theta_target, theta in zip(self.target_q1.trainable_variables, self.q1.trainable_variables):
             theta_target = self.polyak * theta_target + (1 - self.polyak) * theta

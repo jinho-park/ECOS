@@ -1,6 +1,6 @@
 import json
 import numpy as np
-from enum import Enum
+
 
 class Log:
     _instance = None
@@ -30,6 +30,7 @@ class Log:
         self.file_name = ""
         self.folder_path = ""
         self.num_of_task_type = 0
+        self.num_of_edge = 0
 
         self.completed_task = 0
         self.completed_task_cloud = 0
@@ -45,6 +46,7 @@ class Log:
         self.network_delay_lan = list()
 
         self.service_time = list()
+        self.service_time_list = list()
 
         self.processing_time = list()
         self.processing_time_cloud = list()
@@ -62,9 +64,13 @@ class Log:
     def get_completed_task(self):
         return self.completed_task
 
-    def sim_start(self, name):
+    def sim_start(self, name, num_of_edge):
         # self.folder_path = file
         self.file_name = name
+        self.num_of_edge = num_of_edge
+
+        for i in range(num_of_edge):
+            self.service_time_list.append(list())
 
     def sim_stop(self):
         if self.file_enable:
@@ -72,6 +78,7 @@ class Log:
             completed_task_cloud_sum = self.completed_task_cloud
             completed_task_edge_sum = self.completed_task_edge
             completed_task_mobile_sum = self.completed_task_mobile
+            edge_service_time_list = []
 
             network_delay_avg = np.divide(sum(self.network_delay), len(self.network_delay),
                                           out=np.zeros_like(sum(self.network_delay)),
@@ -94,6 +101,12 @@ class Log:
             service_time_avg = np.divide(sum(self.service_time), len(self.service_time),
                                          out=np.zeros_like(sum(self.service_time)),
                                          where=len(self.service_time), casting="unsafe")
+
+            for service_time in self.service_time_list:
+                s_time = np.divide(sum(service_time), len(service_time),
+                                   out=np.zeros_like(sum(service_time)),
+                                   where=len(service_time), casting="unsafe")
+                edge_service_time_list.append(s_time)
 
             processing_time_avg = np.divide(sum(self.processing_time), len(self.processing_time),
                                             out=np.zeros_like(sum(self.processing_time)),
@@ -129,6 +142,7 @@ class Log:
                     "completed_task_mobile": completed_task_mobile_sum
                 },
                 "service_time" : service_time_avg.tolist(),
+                "service_time_edge" : edge_service_time_list,
                 "processing_delay": {
                     "processing_time" : processing_time_avg.tolist(),
                     "processing_time_cloud_avg": processing_time_cloud_avg.tolist(),
@@ -185,6 +199,8 @@ class Log:
         # service time
         service_time = processing_time + buffering_time + network_delay
         self.service_time.append(service_time)
+        edge_num = task.get_source_node()
+        self.service_time_list[edge_num - 1].append(service_time)
 
         if task.get_task_deadline() > service_time:
             self.completed_task += 1

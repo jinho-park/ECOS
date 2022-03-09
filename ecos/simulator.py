@@ -305,6 +305,7 @@ class Simulator:
                         edge = self.entities[0]
                         edge.offloading()
 
+                    evt.update_time(2)
                     self.send_event(evt)
             elif msg.get("network"):
                 #
@@ -378,8 +379,8 @@ class Simulator:
 
                     if progress % 10 == 0:
                         print("Progress:", progress, end='')
-                    # else:
-                    #     print(".", end='')
+                    else:
+                        print("*", end='')
 
                     if self.clock < self.terminate_time:
                         evt.update_time(round(self.terminate_time/100))

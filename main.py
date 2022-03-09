@@ -55,7 +55,7 @@ def main():
                 simul.set_mobile_device(mobile_device)
                 simul.set_simulation_factory(scenario_factory)
                 print("Start simulator")
-                Log.get_instance().sim_start(outputFolderPath)
+                Log.get_instance().sim_start(outputFolderPath, len(device_data["edge"]))
                 simul.start_simulator()
 
 

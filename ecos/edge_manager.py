@@ -5,8 +5,6 @@ from ecos.orchestrator import Orchestrator
 from ecos.topology import Topology
 from ecos.network_model import Network_model
 
-import time
-
 
 # 22.01.05
 class EdgeManager:
@@ -50,9 +48,9 @@ class EdgeManager:
         if self.state == 2:
             self.state = 1
 
-        # for edge in self.node_list:
-        #     orche = edge.get_policy()
-        #     orche.save_weight()
+        for edge in self.node_list:
+            orche = edge.get_policy()
+            orche.shutdown()
 
         return True
 

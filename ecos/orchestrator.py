@@ -1,3 +1,4 @@
+import os.path
 import random
 import ray
 import time
@@ -13,18 +14,20 @@ from ecos.simulator import Simulator
 class Orchestrator:
     def __init__(self, _policy, id):
         self.policy = _policy
-        self.file_path = './ecos_result/model_' + str(id) + "/"
 
-        # RL training
-        self.agent = Agent.remote(Simulator.get_instance().get_num_of_edge(), self.file_path)
-        self.state = np.zeros(6)
-        self.action = None
-        self.reward = 0
-        self.cumulative_reward = 0
-        self.epoch = 1
-        self.replay = ReplayBuffer(21, Simulator.get_instance().get_num_of_edge())
-        self.id = id
         self.training_enable = False
+        # RL training
+        if self.policy != "RANDOM":
+            self.file_path = './ecos_result/model_' + str(id) + "/"
+            self.loss_file = open("loss_log_" + id + ".txt", 'w')
+            self.agent = Agent.remote(Simulator.get_instance().get_num_of_edge(), self.file_path)
+            self.state = np.zeros(6)
+            self.action = None
+            self.reward = 0
+            self.cumulative_reward = 0
+            self.epoch = 1
+            self.replay = ReplayBuffer(21, Simulator.get_instance().get_num_of_edge())
+            self.id = id
 
     def offloading_target(self, task, source):
         collaborationTarget = 0
@@ -131,9 +134,6 @@ class Orchestrator:
     def save_weight(self):
         self.agent.policy.save_weights(self.file_path)
 
-    def get_parameters(self):
-        return self.training_enable, self.replay, self.agent, self.id, self.file_path
-
     def training(self):
         if self.training_enable:
             c_time = time.time()
@@ -147,4 +147,10 @@ class Orchestrator:
                 print("---------------------------")
                 print("source:", self.id, "training time:", time.time() - c_time)
                 print("actor loss:", actor_loss)
+                self.loss_file.write("actor_loss: "+ actor_loss + " critic_loss1: " + critic1_loss + " critic_loss2: " + critic2_loss)
                 self.agent.update_weights.remote()
+
+    def shutdown(self):
+        if self.training_enable:
+            ray.shutdown(self.agent)
+            self.loss_file.close()
