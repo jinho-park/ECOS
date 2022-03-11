@@ -153,15 +153,8 @@ class EdgeManager:
                         Simulator.get_instance().send_event(evt)
                         break
 
-        processing_list = []
-        # for node in self.node_list:
-        #     policy = node.get_policy()
-        #     p = Process(target=policy.training)
-        #     processing_list.append(p)
-        #     p.start()
-        #
-        # for p in processing_list:
-        #     p.join()
+        self.waiting_task = []
+
         for node in self.node_list:
             policy = node.get_policy()
             policy.training()

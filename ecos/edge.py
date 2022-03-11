@@ -35,7 +35,7 @@ class Edge:
                     "id": self.id
                 }
             }
-            event = Event(msg, None, expected_finish_time)
+            event = Event(msg, None, round(expected_finish_time, 6))
             self.previous_time = Simulator.get_instance().get_clock()
             Simulator.get_instance().send_event(event)
             if expected_finish_time > 10:
@@ -44,7 +44,7 @@ class Edge:
             self.waiting_list.append(task)
 
     def update_task_state(self, simulationTime):
-        timeSpen = simulationTime - self.previous_time
+        timeSpen = round(simulationTime - self.previous_time, 6)
 
         for task in self.exec_list:
             allocatedResource = task.get_allocated_resource()

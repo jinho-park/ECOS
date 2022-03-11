@@ -124,8 +124,6 @@ class Simulator:
 
     def start_simulator(self):
         #
-        print("start simulation")
-
         self.run()
 
     def run(self):
@@ -268,7 +266,6 @@ class Simulator:
     def process_event(self, event):
         for evt in event:
             msg = evt.get_message()
-            # print(msg, ":", evt.get_time())
 
             # event described by json
             # call the event depend on the function
@@ -307,6 +304,7 @@ class Simulator:
 
                     evt.update_time(2)
                     self.send_event(evt)
+                    continue
             elif msg.get("network"):
                 #
                 if msg.get("network") == "transmission":
@@ -350,10 +348,10 @@ class Simulator:
                             et = Event(msgg, evt.get_task(), delay)
 
                             self.send_event(et)
+                            continue
                         else:
                             source_edge = route_list[0]
                             dest = route_list[1]
-                            updated_link = link
 
                             # find link
                             for lnk in self.scenario_factory.get_edge_manager().get_link_list():
@@ -371,7 +369,7 @@ class Simulator:
                             et = Event(msg, evt.get_task(), delay)
 
                             self.send_event(et)
-
+                            continue
             elif msg.get("simulation"):
                 if msg.get("simulation") == "progress":
                     #

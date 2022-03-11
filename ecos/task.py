@@ -72,7 +72,9 @@ class Task:
         self.buffering_time[type] = buff - sum(self.network_delay) - self.task_birth_time
 
     def set_processing_time(self, proc, type):
-        self.processing_time[type] = proc - sum(self.network_delay) - sum(self.buffering_time) - self.task_birth_time
+        net_delay = sum(self.network_delay)
+        buff_delay = sum(self.buffering_time)
+        self.processing_time[type] = proc - net_delay - buff_delay - self.task_birth_time
 
     def set_network_delay(self, value, type):
         self.network_delay[type] = value - self.task_birth_time

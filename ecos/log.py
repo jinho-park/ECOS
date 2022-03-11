@@ -106,7 +106,7 @@ class Log:
                 s_time = np.divide(sum(service_time), len(service_time),
                                    out=np.zeros_like(sum(service_time)),
                                    where=len(service_time), casting="unsafe")
-                edge_service_time_list.append(s_time)
+                edge_service_time_list.append(s_time.tolist())
 
             processing_time_avg = np.divide(sum(self.processing_time), len(self.processing_time),
                                             out=np.zeros_like(sum(self.processing_time)),
@@ -141,6 +141,7 @@ class Log:
                     "completed_task_edge": completed_task_edge_sum,
                     "completed_task_mobile": completed_task_mobile_sum
                 },
+                "success_task": self.success_task,
                 "service_time" : service_time_avg.tolist(),
                 "service_time_edge" : edge_service_time_list,
                 "processing_delay": {
@@ -165,7 +166,7 @@ class Log:
             }
 
             with open(self.file_name, 'w', encoding="utf-8") as make_file:
-                json.dump(result, make_file, ensure_ascii=False, indent="\n")
+                json.dump(result, make_file, ensure_ascii=False, indent='\n')
 
     def task_end(self, task):
         self.record_log(task)
@@ -202,12 +203,14 @@ class Log:
         edge_num = task.get_source_node()
         self.service_time_list[edge_num - 1].append(service_time)
 
-        if task.get_task_deadline() > service_time:
-            self.completed_task += 1
+        self.completed_task += 1
 
-            if task.get_finish_node() == 0:
-                self.completed_task_mobile += 1
-            elif task.get_finish_node() == 1:
-                self.completed_task_edge += 1
-            elif task.get_finish_node() == 2:
-                self.completed_task_cloud += 1
+        if task.get_finish_node() == 0:
+            self.completed_task_mobile += 1
+        elif task.get_finish_node() == 1:
+            self.completed_task_edge += 1
+        elif task.get_finish_node() == 2:
+            self.completed_task_cloud += 1
+
+        if (task.get_task_deadline() / 1000) > service_time:
+            self.success_task += 1

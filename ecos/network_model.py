@@ -8,7 +8,7 @@ class Network_model:
         self.poissonMean = 1
         self.bandwidth = _bandwidth
         self.propagation = _propagation
-        self.sumTaskSize = 100
+        self.sumTaskSize = 0
         self.send_task_list = list()
         self.send_task_type = list()
 
@@ -26,7 +26,7 @@ class Network_model:
 
         self.update_MM1_parameter()
 
-        return self.calculate_MM1(self.propagation, self.bandwidth)
+        return self.calculate_MM1(self.sumTaskSize, self.propagation, self.bandwidth)
 
     def update_MM1_parameter(self):
         size_sum = 0
@@ -50,12 +50,12 @@ class Network_model:
         self.poissonMean = poisson / len(self.send_task_list)
         self.sumTaskSize = size_sum
 
-    def calculate_MM1(self, propagation_delay, bandwidth):
-        taskSize = self.sumTaskSize * 1000 # KB to Byte
+    def calculate_MM1(self, sum_task, propagation_delay, bandwidth):
+        taskSize = sum_task * 1000 # KB to Byte
         propagation_delay_ = propagation_delay / 1000
 
         bps = bandwidth * 1000000 / 8
-        lamda = 1 / self.poissonMean
+        lamda = 1 / (self.poissonMean * 10)
         mu = bps / taskSize
 
         result = 1 / (mu - lamda * (len(self.send_task_list)))
@@ -72,4 +72,7 @@ class Network_model:
         self.send_task_type[task.get_task_type() - 1] -= 1
 
     def get_delay(self):
-        return self.calculate_MM1(self.propagation, self.bandwidth)
+        if self.sumTaskSize:
+            return self.calculate_MM1(self.sumTaskSize, self.propagation, self.bandwidth)
+        else:
+            return self.calculate_MM1(1, self.propagation, self.bandwidth)

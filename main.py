@@ -2,14 +2,11 @@ import json
 import os
 
 from ecos import Simulator
-from ecos import Orchestrator
 from ecos import EdgeManager
 from ecos import DeviceManager
 from ecos import CloudManager
 from custom_scenario_factory import Custom_scenario_factory
 from ecos import Log
-
-from multiprocessing import Process
 
 
 def main():
