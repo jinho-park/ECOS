@@ -34,7 +34,7 @@ def main():
 
     simul = Simulator.get_instance()
 
-    for episode in range(2):
+    for episode in range(1):
         for mobile_device in range(int(configure_data["min_num_of_mobile_device"]),
                                    int(configure_data["max_num_of_mobile_device"]),
                                    int(configure_data["mobile_device_counter"])):
@@ -44,6 +44,8 @@ def main():
                     exit(1)
 
                 outputFolderPath = result + "episode" + str(episode) + "_" + policy + "_" + str(mobile_device)+".json"
+                folderPath = './results/' + policy + "_" + str(episode)
+                simul.set_loss_folder_path(folderPath)
                 deviceManager = DeviceManager(device_data["mobile"], mobile_device, device_data["edge"])
                 print("Device creating is completed")
                 edgeManager = EdgeManager(device_data["edge"], net_data)
@@ -52,7 +54,7 @@ def main():
                 simul.set_mobile_device(mobile_device)
                 simul.set_simulation_factory(scenario_factory)
                 print("Start simulator")
-                Log.get_instance().sim_start(outputFolderPath, len(device_data["edge"]))
+                Log.get_instance().sim_start(outputFolderPath, len(device_data["edge"]), simul.get_warmup_time())
                 simul.start_simulator()
 
 

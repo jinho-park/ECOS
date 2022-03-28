@@ -1,8 +1,9 @@
 {
-  "simulation_time" : 5,
-  "min_num_of_mobile_device" : 300,
-  "max_num_of_mobile_device" : 400,
+  "simulation_time" : 30,
+  "warmup_time": 3,
+  "min_num_of_mobile_device" : 400,
+  "max_num_of_mobile_device" : 500,
   "mobile_device_counter" : 100,
-  "orchestration_policy" : ["A2C"],
+  "orchestration_policy" : ["RANDOM"],
   "simul_scenario" : "EDGE_ORCHEST"
 }

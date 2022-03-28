@@ -18,6 +18,7 @@ class EdgeManager:
         self.state = 1
         self.orchestrator = None
         self.waiting_task = list()
+        self.epoch = 1
 
     #minseon
     def get_node_list(self):
@@ -154,10 +155,12 @@ class EdgeManager:
                         break
 
         self.waiting_task = []
+        self.epoch += 1
 
-        for node in self.node_list:
-            policy = node.get_policy()
-            policy.training()
+        if self.epoch % 10 == 0:
+            for node in self.node_list:
+                policy = node.get_policy()
+                policy.training()
 
     def get_network(self):
         return self.edge_network

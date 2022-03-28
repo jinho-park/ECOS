@@ -8,8 +8,8 @@ import ray
 @ray.remote
 class Agent:
     def __init__(self, action_dim, file_path, epoch_step=0, actor_lr_rate=0.0001,
-                 critic_lr_rate=0.001, gamma=0.99,
-                 polyak=0.995):
+                 critic_lr_rate=0.001, gamma=0.9,
+                 polyak=0.99):
         self.policy = a2c.Actor(action_dim)
         self.q1 = a2c.Critic(action_dim)
         self.q2 = a2c.Critic(action_dim)
@@ -18,6 +18,7 @@ class Agent:
 
         self.file_path = file_path
         self.epoch_step = epoch_step
+        self.writer = tf.summary.create_file_writer('./results')
 
         self.alpha = tf.Variable(0.0, dtype=tf.float32)
         self.target_entropy = -tf.constant(action_dim, dtype=tf.float32)
@@ -92,7 +93,7 @@ class Agent:
 
             min_q = tf.minimum(q1, q2)
 
-            actor_loss = tf.reduce_mean(min_q)
+            actor_loss = -tf.reduce_mean(min_q)
 
         grads = tape.gradient(actor_loss, self.policy.trainable_variables)
         self.actor_optimizer.apply_gradients(zip(grads, self.policy.trainable_variables))
@@ -129,10 +130,6 @@ class Agent:
 
         return critic1_loss, critic2_loss, actor_loss, alpha_loss
 
-    def get_td_target(self, current_state):
-        q1 = self.q1.call()
-
-    # @tf.function
     def update_weights(self):
         for theta_target, theta in zip(self.target_q1.trainable_variables, self.q1.trainable_variables):
             theta_target = self.polyak * theta_target + (1 - self.polyak) * theta

@@ -1,9 +1,7 @@
 import json
-from enum import Enum
 from ecos.event import Event
 from ecos.task_generator import Task_generator
 from ecos.log import Log
-from ecos.topology import Topology
 
 
 # 2022.01.07
@@ -17,6 +15,7 @@ class Simulator:
         return cls._instance
 
     def __init__(self):
+        self.loss_result_path = ""
         # all event excluded task creation
         self.taskQueue = list()
         # task create
@@ -27,7 +26,7 @@ class Simulator:
         self.eventTag = self.my_enum('send', 'create', 'processing', "transmission", "progress", "stop")
         self.node_type = self.my_enum("Mobile", "Edge", "Cloud")
         self.network_type = self.my_enum("WLAN", "MAN", "WAN")
-        self.entity_state = Enum("FINISHED", "RUNNABLE")
+        self.entity_state = self.my_enum("FINISHED", "RUNNABLE")
 
         # simulation set
         self.running = False
@@ -61,6 +60,7 @@ class Simulator:
 
     def initialize(self, configure, _network, _app, _num_of_edge, policy):
         self.terminate_time = int(configure["simulation_time"]) * 60
+        self.warmUpPeriod = int(configure["warmup_time"]) * 60
         self.orchestrator_policy = policy
         self.minNumOfMobileDevice = int(configure["min_num_of_mobile_device"])
         self.maxNumOfMobileDevice = int(configure["max_num_of_mobile_device"])
@@ -72,6 +72,12 @@ class Simulator:
         self.task_look_up_table = _app
 
         return True
+
+    def set_loss_folder_path(self, path):
+        self.loss_result_path = path
+
+    def get_loss_folder_path(self):
+        return self.loss_result_path
 
     def set_simulation_factory(self, _scenario_factory):
         self.scenario_factory = _scenario_factory
@@ -85,9 +91,6 @@ class Simulator:
     def set_mobile_device(self, _num_device):
         self.num_device = _num_device
         self.task_generator = Task_generator(_num_device, self.task_look_up_table)
-
-    def get_warmup_period(self):
-        return self.warmUpPeriod
 
     def get_task_look_up_table(self):
         return self.task_look_up_table
@@ -121,6 +124,9 @@ class Simulator:
 
     def get_clock(self):
         return self.clock
+
+    def get_warmup_time(self):
+        return self.warmUpPeriod
 
     def start_simulator(self):
         #
@@ -302,7 +308,7 @@ class Simulator:
                         edge = self.entities[0]
                         edge.offloading()
 
-                    evt.update_time(2)
+                    evt.update_time(0.01)
                     self.send_event(evt)
                     continue
             elif msg.get("network"):

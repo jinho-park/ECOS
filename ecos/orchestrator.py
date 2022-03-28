@@ -1,8 +1,8 @@
-import os.path
 import random
 import ray
 import time
 import numpy as np
+import os
 
 from ecos.agent import Agent
 from ecos.replaybuffer import ReplayBuffer
@@ -18,15 +18,20 @@ class Orchestrator:
         self.training_enable = False
         # RL training
         if self.policy != "RANDOM":
+
             self.file_path = './ecos_result/model_' + str(id) + "/"
-            self.loss_file = open("loss_log_" + id + ".txt", 'w')
+            folder_path = Simulator.get_instance().get_loss_folder_path()
+            if not os.path.isdir(folder_path):
+                os.mkdir(folder_path)
+            self.loss_file = open(folder_path + "/loss_log_" + str(id) + ".txt", 'w')
+            # create folder
             self.agent = Agent.remote(Simulator.get_instance().get_num_of_edge(), self.file_path)
             self.state = np.zeros(6)
             self.action = None
             self.reward = 0
             self.cumulative_reward = 0
             self.epoch = 1
-            self.replay = ReplayBuffer(21, Simulator.get_instance().get_num_of_edge())
+            self.replay = ReplayBuffer(20, Simulator.get_instance().get_num_of_edge())
             self.id = id
 
     def offloading_target(self, task, source):
@@ -40,6 +45,12 @@ class Orchestrator:
         elif self.policy == "A2C":
             if not self.training_enable:
                 self.training_enable = True
+
+            if Simulator.get_instance().get_clock() < Simulator.get_instance().get_warmup_time():
+                num_of_edge = simul.get_num_of_edge()
+                selectServer = random.randrange(1, num_of_edge + 1)
+                collaborationTarget = selectServer
+                return collaborationTarget
 
             available_computing_resource = []
             waiting_task_list = []
@@ -68,12 +79,17 @@ class Orchestrator:
                 delay_list.append(delay)
 
             for edge in edge_list:
-                waiting_task_list.append(len(edge.get_waiting_list()))
+                waiting_task_list.append(len(edge.get_waiting_list())/100)
                 available_computing_resource.append(edge.CPU)
 
-            state_ = [task.get_remain_size()] + [task.get_task_deadline()] + \
-                     available_computing_resource + waiting_task_list + \
-                     delay_list + [source]
+            max_resource = max(available_computing_resource)
+            resource_list = []
+
+            for i in range(len(edge_list)):
+                resource_list.append(available_computing_resource[i] / max_resource)
+
+            state_ = [task.get_remain_size()/1000] + [task.get_task_deadline()/1000] + \
+                     resource_list + waiting_task_list + delay_list
             state = np.array(state_, ndmin=2)
 
             if self.action is not None:
@@ -89,8 +105,7 @@ class Orchestrator:
             action = ray.get(self.agent.sample_action.remote(state))
             self.action = np.array(action, ndmin=2)
             self.state = state
-            action_sample = np.random.choice(Simulator.get_instance().get_num_of_edge(),
-                                             p=np.squeeze(action))
+            action_sample = np.random.choice(Simulator.get_instance().get_num_of_edge(), p=np.squeeze(action))
             collaborationTarget = action_sample + 1
 
             # estimate reward
@@ -110,6 +125,7 @@ class Orchestrator:
                         delay = link.get_delay()
 
                         transmission_time += delay
+                        break
 
                 source_ = dest
 
@@ -118,16 +134,16 @@ class Orchestrator:
             waiting_time = 0
 
             for task in waiting_task_list:
-                waiting_time = task.get_remain_size() / available_computing_resource[action_sample]
+                waiting_time += task.get_remain_size() / available_computing_resource[action_sample]
 
-            self.reward = (processing_time + transmission_time + waiting_time) * -1
-            self.cumulative_reward += self.reward
+            self.reward = (processing_time + transmission_time + waiting_time) * -10
             self.epoch += 1
 
             print("=======================")
-            print("source: ", source, " target: ", collaborationTarget)
-            print("reward: ", self.reward)
-            print("cumulative reward: ", self.cumulative_reward)
+            print("state:", state_)
+            print("source:", source, " target:", collaborationTarget, "action:", self.action)
+            print("reward:", self.reward, "processing:", processing_time,
+                  "transmission:", transmission_time, "waiting:", waiting_time)
 
         return collaborationTarget
 
@@ -135,19 +151,25 @@ class Orchestrator:
         self.agent.policy.save_weights(self.file_path)
 
     def training(self):
-        if self.training_enable:
+        if self.training_enable and Simulator.get_instance().get_warmup_time() < Simulator.get_instance().get_clock():
+            print("**************" + str(self.epoch) + "***********")
             c_time = time.time()
             # for epc in range(self.epoch):
             if self.replay.get_size() > 0:
                 current_state, actions, rewards, next_state = self.replay.fetch_sample(num_samples=32)
 
-                critic1_loss, critic2_loss, actor_loss, alpha_loss = ray.get(self.agent.train.remote(current_state, actions,
-                                                                                          rewards, next_state))
+                critic1_loss, critic2_loss, actor_loss, alpha_loss = ray.get(self.agent.train.remote(current_state,
+                                                                                                     actions,
+                                                                                                     rewards,
+                                                                                                     next_state))
 
                 print("---------------------------")
                 print("source:", self.id, "training time:", time.time() - c_time)
-                print("actor loss:", actor_loss)
-                self.loss_file.write("actor_loss: "+ actor_loss + " critic_loss1: " + critic1_loss + " critic_loss2: " + critic2_loss)
+                print("actor loss:", actor_loss.numpy(), "critic loss1:", critic1_loss.numpy(),
+                      "critic loss2:", critic2_loss.numpy())
+                self.loss_file.write("actor_loss: " + str(actor_loss.numpy()) +
+                                     " critic_loss1: " + str(critic1_loss.numpy()) +
+                                     " critic_loss2: " + str(critic2_loss.numpy()) + "\n")
                 self.agent.update_weights.remote()
 
     def shutdown(self):

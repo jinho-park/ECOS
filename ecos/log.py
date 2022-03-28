@@ -31,6 +31,7 @@ class Log:
         self.folder_path = ""
         self.num_of_task_type = 0
         self.num_of_edge = 0
+        self.warmup_time = 0
 
         self.completed_task = 0
         self.completed_task_cloud = 0
@@ -64,10 +65,11 @@ class Log:
     def get_completed_task(self):
         return self.completed_task
 
-    def sim_start(self, name, num_of_edge):
+    def sim_start(self, name, num_of_edge, warmup):
         # self.folder_path = file
         self.file_name = name
         self.num_of_edge = num_of_edge
+        self.warmup_time = warmup
 
         for i in range(num_of_edge):
             self.service_time_list.append(list())
@@ -173,6 +175,8 @@ class Log:
 
     def record_log(self, task):
         # type = task.get_task_type()
+        if task.get_birth_time() < self.warmup_time:
+            return
 
         # processing time
         self.processing_time_cloud.append(task.get_processing_time(self.device_type["cloud"]))

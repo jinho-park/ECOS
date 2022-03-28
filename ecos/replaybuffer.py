@@ -21,6 +21,9 @@ class ReplayBuffer:
                                      np.array(next_state, ndmin=2), axis=0)
         self.total_size += 1
 
+        if self.total_size > self.max_size:
+            self.total_size = self.max_size
+
     def fetch_sample(self, num_samples):
 
         if num_samples > self.total_size:
