@@ -66,6 +66,7 @@ class Log:
         return self.completed_task
 
     def sim_start(self, name, num_of_edge, warmup):
+        self.__init__()
         # self.folder_path = file
         self.file_name = name
         self.num_of_edge = num_of_edge

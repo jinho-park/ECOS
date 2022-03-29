@@ -58,7 +58,8 @@ class EdgeManager:
     def create_edge_server(self):
         id = 1
         for i in range(len(self.edge_props)):
-            edge = Edge(id, self.edge_props[i], Orchestrator(Simulator.get_instance().get_orchestration_policy(), id), 0)
+            och = Orchestrator(Simulator.get_instance().get_orchestration_policy(), id)
+            edge = Edge(id, self.edge_props[i], och, 0, 3)
             id += 1
             self.node_list.append(edge)
 
@@ -76,9 +77,22 @@ class EdgeManager:
     def receive_task_from_edge(self, event):
         # find edge
         msg = event.get_message()
+        task_list = list()
+
+        for edge in self.node_list:
+            task_num = len(edge.get_exec_list()) + len(edge.get_waiting_list())
+            task_list.append(task_num)
+
+        data = [x ** 2 for x in task_list]
+        if sum(data) != 0:
+            load_balance = (sum(task_list)**2) / sum(data)
+        else:
+            load_balance = 1
+        task = event.get_task()
+        task.set_load_balance(load_balance)
 
         node = self.node_list[int(msg["detail"]["route"][0]) - 1]
-        node.task_processing(event.get_task())
+        node.task_processing(task)
 
     def receive_task_from_device(self, event):
         #

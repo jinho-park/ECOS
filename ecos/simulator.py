@@ -399,7 +399,7 @@ class Simulator:
 
     def send_event(self, event):
         #
-        event.update_time(round(event.get_time(), 6))
+        event.update_time(round(event.get_time(), 3))
         self.taskQueue.append(event)
 
     def my_enum(*sequential, **named):

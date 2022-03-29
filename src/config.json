@@ -1,5 +1,5 @@
 {
-  "simulation_time" : 30,
+  "simulation_time" : 10,
   "warmup_time": 3,
   "min_num_of_mobile_device" : 400,
   "max_num_of_mobile_device" : 500,

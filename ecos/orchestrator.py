@@ -18,7 +18,6 @@ class Orchestrator:
         self.training_enable = False
         # RL training
         if self.policy != "RANDOM":
-
             self.file_path = './ecos_result/model_' + str(id) + "/"
             folder_path = Simulator.get_instance().get_loss_folder_path()
             if not os.path.isdir(folder_path):
@@ -79,7 +78,7 @@ class Orchestrator:
                 delay_list.append(delay)
 
             for edge in edge_list:
-                waiting_task_list.append(len(edge.get_waiting_list())/100)
+                waiting_task_list.append(len(edge.get_waiting_list()) / 100)
                 available_computing_resource.append(edge.CPU)
 
             max_resource = max(available_computing_resource)
@@ -88,7 +87,7 @@ class Orchestrator:
             for i in range(len(edge_list)):
                 resource_list.append(available_computing_resource[i] / max_resource)
 
-            state_ = [task.get_remain_size()/1000] + [task.get_task_deadline()/1000] + \
+            state_ = [task.get_remain_size() / 1000] + [task.get_task_deadline() / 1000] + \
                      resource_list + waiting_task_list + delay_list
             state = np.array(state_, ndmin=2)
 
@@ -110,7 +109,10 @@ class Orchestrator:
 
             # estimate reward
             # processing time
-            processing_time = task.get_remain_size() / available_computing_resource[action_sample]
+            requirement = task.get_input_size() / task.get_task_deadline()
+            processing_time = requirement / available_computing_resource[action_sample]
+            processing_time *= min(edge_list[action_sample].get_max_processing(),
+                                   len(edge_list[action_sample].get_waiting_list()))
             # transmission time
             network = edge_manager.get_network()
             route = network.get_path_by_dijkstra(source, collaborationTarget)
@@ -134,9 +136,28 @@ class Orchestrator:
             waiting_time = 0
 
             for task in waiting_task_list:
-                waiting_time += task.get_remain_size() / available_computing_resource[action_sample]
+                waiting_time += task.get_input_size() / task.get_task_deadline()
 
-            self.reward = (processing_time + transmission_time + waiting_time) * -10
+            waiting_time /= (len(waiting_task_list) * available_computing_resource[action_sample])
+
+            # load_balancing
+            task_list = list()
+
+            for edge in edge_list:
+                exec_list = edge.get_exec_list()
+                wait_list = edge.get_waiting_list()
+
+                num_task = len(exec_list) + len(wait_list)
+
+                if edge_list[action_sample] == edge:
+                    num_task += 1
+                task_list.append(num_task)
+
+            data = [x ** 2 for x in task_list]
+            load_balance = (sum(task_list) ** 2) / sum(data)
+
+            self.reward = (processing_time + transmission_time + waiting_time) * -10 + \
+                          load_balance
             self.epoch += 1
 
             print("=======================")
@@ -144,6 +165,54 @@ class Orchestrator:
             print("source:", source, " target:", collaborationTarget, "action:", self.action)
             print("reward:", self.reward, "processing:", processing_time,
                   "transmission:", transmission_time, "waiting:", waiting_time)
+
+        elif self.policy == "A2C_TEST":
+            available_computing_resource = []
+            waiting_task_list = []
+            delay_list = []
+            edge_manager = Simulator.get_instance().get_scenario_factory().get_edge_manager()
+            edge_list = edge_manager.get_node_list()
+            link_list = edge_manager.get_link_list()
+            topology = edge_manager.get_network()
+
+            for edge in range(len(edge_list)):
+                route = topology.get_path_by_dijkstra(source, edge + 1)
+                delay = 0
+
+                for idx in range(len(route)):
+                    if idx + 1 >= len(route):
+                        break
+
+                    for link in link_list:
+                        link_status = link.get_link()
+                        set = [route[idx], route[idx + 1]]
+
+                        if sorted(set) == sorted(link_status):
+                            delay += link.get_delay()
+                            break
+
+                delay_list.append(delay)
+
+            for edge in edge_list:
+                waiting_task_list.append(len(edge.get_waiting_list()) / 100)
+                available_computing_resource.append(edge.CPU)
+
+            max_resource = max(available_computing_resource)
+            resource_list = []
+
+            for i in range(len(edge_list)):
+                resource_list.append(available_computing_resource[i] / max_resource)
+
+            state_ = [task.get_remain_size() / 1000] + [task.get_task_deadline() / 1000] + \
+                     resource_list + waiting_task_list + delay_list
+            state = np.array(state_, ndmin=2)
+
+            # edit
+            action = ray.get(self.agent.sample_action.remote(state))
+            self.action = np.array(action, ndmin=2)
+            self.state = state
+            action_sample = np.random.choice(Simulator.get_instance().get_num_of_edge(), p=np.squeeze(action))
+            collaborationTarget = action_sample + 1
 
         return collaborationTarget
 

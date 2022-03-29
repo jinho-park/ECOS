@@ -28,6 +28,8 @@ class Task:
         # 0: create, 1: transmission, 2: processing
         self.status = 0
 
+        self.load_balance = 0
+
     def create_task(self, _time):
         self.task_birth_time = _time
         self.task_remain_size = self.task_size
@@ -71,13 +73,22 @@ class Task:
     def set_buffering_time(self, buff, type):
         self.buffering_time[type] = buff - sum(self.network_delay) - self.task_birth_time
 
+        if self.buffering_time[type] < 0:
+            print("buffering time error", self.buffering_time[type])
+
     def set_processing_time(self, proc, type):
         net_delay = sum(self.network_delay)
         buff_delay = sum(self.buffering_time)
         self.processing_time[type] = proc - net_delay - buff_delay - self.task_birth_time
 
+        if self.processing_time[type] < 0:
+            print("processing time error", self.processing_time[type])
+
     def set_network_delay(self, value, type):
         self.network_delay[type] = value - self.task_birth_time
+
+        if self.network_delay[type] < 0:
+            print("network delay error", self.network_delay[type])
 
     def get_buffering_time(self, type):
         return self.buffering_time[type]
@@ -123,3 +134,6 @@ class Task:
 
     def set_status(self, status):
         self.status = status
+
+    def set_load_balance(self, load_balance):
+        self.load_balance = load_balance

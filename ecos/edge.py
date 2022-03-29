@@ -4,10 +4,11 @@ from ecos.event import Event
 
 
 class Edge:
-    def __init__(self, id, props, policy, time):
+    def __init__(self, id, props, policy, time, proc_num):
         self.CPU = props["mips"]
         self.id = id
         self.policy = policy
+        self.num_of_max_processing = proc_num
         self.exec_list = list()
         self.finish_list = list()
         self.waiting_list = list()
@@ -24,10 +25,12 @@ class Edge:
 
         task.set_status(2)
 
-        if len(self.exec_list) == 0 and len(self.waiting_list) < 1:
-            task.set_allocated_resource(self.CPU)
-            expected_finish_time = task.get_remain_size() / self.CPU
+        if len(self.exec_list) < 3 and len(self.waiting_list) < 1:
             self.exec_list.append(task)
+            require_list = [x.get_input_size()/x.get_task_deadline() for x in self.exec_list]
+            ratio = (task.get_input_size()/task.get_task_deadline())/sum(require_list)
+            task.set_allocated_resource(self.CPU * ratio)
+            expected_finish_time = task.get_remain_size() / (self.CPU * ratio)
             msg = {
                 "task": "check",
                 "detail": {
@@ -35,7 +38,7 @@ class Edge:
                     "id": self.id
                 }
             }
-            event = Event(msg, None, round(expected_finish_time, 6))
+            event = Event(msg, None, round(expected_finish_time, 3))
             self.previous_time = Simulator.get_instance().get_clock()
             Simulator.get_instance().send_event(event)
             if expected_finish_time > 10:
@@ -48,9 +51,8 @@ class Edge:
 
         for task in self.exec_list:
             allocatedResource = task.get_allocated_resource()
-            remainSize = round(task.get_remain_size() - (allocatedResource * timeSpen), 6)
+            remainSize = round(task.get_remain_size() - (allocatedResource * timeSpen), 0)
             task.set_remain_size(remainSize)
-            task.set_finish_node(1)
 
         if len(self.exec_list) == 0 and len(self.waiting_list) == 0:
             self.previous_time = simulationTime
@@ -64,13 +66,18 @@ class Edge:
 
         if len(self.waiting_list) > 0:
             for task in self.waiting_list:
-                if len(self.exec_list) > 0:
+                if len(self.exec_list) >= 3:
                     break
 
-                task.set_allocated_resource(self.CPU)
                 task.set_buffering_time(Simulator.get_instance().get_clock(), 1)
                 self.exec_list.append(task)
                 self.waiting_list.remove(task)
+
+        # allocate computing resource according to task requirement
+        requirement_list = [x.get_input_size()/x.get_task_deadline() for x in self.exec_list]
+        for task in self.exec_list:
+            requirement = task.get_input_size()/task.get_task_deadline()
+            task.set_allocated_resource((requirement / sum(requirement_list)) * self.CPU)
 
         if len(self.exec_list) > 0:
             # add event
@@ -79,8 +86,8 @@ class Edge:
                 remainingLength = task.get_remain_size()
                 estimatedFinishTime = (remainingLength / task.get_allocated_resource())
 
-                if estimatedFinishTime < 1:
-                    estimatedFinishTime = round(estimatedFinishTime, 6)
+                if estimatedFinishTime < 0.001:
+                    estimatedFinishTime = 0.001
 
                 if estimatedFinishTime < nextEvent:
                     nextEvent = estimatedFinishTime
@@ -100,8 +107,8 @@ class Edge:
     def finish_task(self, task):
         # 1 means edge node
         task.set_finish_node(1)
-        task.set_processing_time(Simulator.get_instance().get_clock(), 1)
-        task.set_end_time(Simulator.get_instance().get_clock())
+        task.set_processing_time(self.previous_time, 1)
+        task.set_end_time(self.previous_time)
         Log.get_instance().record_log(task)
         self.finish_list.remove(task)
 
@@ -118,3 +125,6 @@ class Edge:
             resourceUsage += task.get_allocated_resource()
 
         return self.CPU - resourceUsage
+
+    def get_max_processing(self):
+        return self.num_of_max_processing
