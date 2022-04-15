@@ -59,6 +59,10 @@ class Log:
         self.buffering_time_edge = list()
         self.buffering_time_mobile = list()
 
+        self.QoE = list()
+        self.QoE_list = list()
+        self.load_balance = list()
+
     def get_service_time(self):
         return self.service_time
 
@@ -74,6 +78,7 @@ class Log:
 
         for i in range(num_of_edge):
             self.service_time_list.append(list())
+            self.QoE_list.append(list())
 
     def sim_stop(self):
         if self.file_enable:
@@ -82,6 +87,7 @@ class Log:
             completed_task_edge_sum = self.completed_task_edge
             completed_task_mobile_sum = self.completed_task_mobile
             edge_service_time_list = []
+            edge_QoE_list = []
 
             network_delay_avg = np.divide(sum(self.network_delay), len(self.network_delay),
                                           out=np.zeros_like(sum(self.network_delay)),
@@ -111,6 +117,12 @@ class Log:
                                    where=len(service_time), casting="unsafe")
                 edge_service_time_list.append(s_time.tolist())
 
+            for QoE in self.QoE_list:
+                s_time = np.divide(sum(QoE), len(QoE),
+                                   out=np.zeros_like(sum(QoE)),
+                                   where=len(QoE), casting="unsafe")
+                edge_QoE_list.append(s_time.tolist())
+
             processing_time_avg = np.divide(sum(self.processing_time), len(self.processing_time),
                                             out=np.zeros_like(sum(self.processing_time)),
                                             where=len(self.processing_time), casting="unsafe")
@@ -136,6 +148,8 @@ class Log:
             buffering_time_mobile_avg = np.divide(sum(self.buffering_time_mobile), len(self.buffering_time_mobile),
                                                   out=np.zeros_like(sum(self.buffering_time_mobile)),
                                                   where=len(self.buffering_time_mobile), casting="unsafe")
+
+            cumulative_reward = sum(self.QoE)
 
             result = {
                 "completed_task": {
@@ -165,11 +179,14 @@ class Log:
                     "buffering_time_cloud": buffering_time_cloud_avg.tolist(),
                     "buffering_time_edge": buffering_time_edge_avg.tolist(),
                     "buffering_time_mobile": buffering_time_mobile_avg.tolist()
-                }
+                },
+                "QoE": cumulative_reward,
+                "QoE_list": edge_QoE_list,
+                "Load_balance": self.load_balance
             }
 
             with open(self.file_name, 'w', encoding="utf-8") as make_file:
-                json.dump(result, make_file, ensure_ascii=False, indent='\n')
+                json.dump(result, make_file, ensure_ascii=False, indent='\t')
 
     def task_end(self, task):
         self.record_log(task)
@@ -207,6 +224,7 @@ class Log:
         self.service_time.append(service_time)
         edge_num = task.get_source_node()
         self.service_time_list[edge_num - 1].append(service_time)
+        self.QoE_list[edge_num - 1].append(task.get_reward())
 
         self.completed_task += 1
 
@@ -219,3 +237,8 @@ class Log:
 
         if (task.get_task_deadline() / 1000) > service_time:
             self.success_task += 1
+
+        self.QoE.append(task.get_reward())
+
+    def load_balance_record(self, loadbalance):
+        self.load_balance.append(loadbalance)

@@ -1,3 +1,5 @@
+import math
+
 import tensorflow as tf
 import tensorflow_probability as tfp
 import numpy as np
@@ -30,8 +32,12 @@ class Actor(tf.keras.Model):
 class Critic(tf.keras.Model):
     def __init__(self, act_dim):
         super().__init__()
-        self.dense1_layer_v = tf.keras.layers.Dense(64, activation="relu")
-        self.dense2_layer_v = tf.keras.layers.Dense(64, activation="relu")
+        self.dense1_layer_v = tf.keras.layers.Dense(64, activation="relu",
+                                                    kernel_initializer="random_normal",
+                                                    bias_initializer="zeros")
+        self.dense2_layer_v = tf.keras.layers.Dense(64, activation="relu",
+                                                    kernel_initializer="random_normal",
+                                                    bias_initializer="zeros")
         self.output_layer_v = tf.keras.layers.Dense(1)
 
         # self.dense1_layer_a = tf.keras.layers.Dense(64, activation="relu",
@@ -49,6 +55,9 @@ class Critic(tf.keras.Model):
         v1 = self.dense1_layer_v(state_action)
         v2 = self.dense2_layer_v(v1)
         value = self.output_layer_v(v2)
+
+        assert math.isnan(value[0]) is False, print("state_action:", state_action[0],
+                                                    "v1:", v1[0], "v2:", v2[0])
 
         # state_action = tf.concat([state, action], axis=1)
         # a1 = self.dense1_layer_a(state_action)

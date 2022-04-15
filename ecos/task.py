@@ -28,7 +28,7 @@ class Task:
         # 0: create, 1: transmission, 2: processing
         self.status = 0
 
-        self.load_balance = 0
+        self.reward = 0
 
     def create_task(self, _time):
         self.task_birth_time = _time
@@ -135,5 +135,8 @@ class Task:
     def set_status(self, status):
         self.status = status
 
-    def set_load_balance(self, load_balance):
-        self.load_balance = load_balance
+    def set_reward(self, reward):
+        self.reward = reward
+
+    def get_reward(self):
+        return self.reward

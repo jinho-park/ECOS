@@ -59,6 +59,7 @@ class Simulator:
         self.task_generator = None
 
     def initialize(self, configure, _network, _app, _num_of_edge, policy):
+        self.__init__()
         self.terminate_time = int(configure["simulation_time"]) * 60
         self.warmUpPeriod = int(configure["warmup_time"]) * 60
         self.orchestrator_policy = policy
@@ -367,6 +368,7 @@ class Simulator:
                                 if sorted(set) == sorted(lnk_status):
                                     updated_link = lnk
                                     delay = lnk.get_download_delay(evt.get_task())
+                                    break
 
                             msg["detail"]["delay"] = delay
                             msg["detail"]["link"] = updated_link
@@ -376,10 +378,62 @@ class Simulator:
 
                             self.send_event(et)
                             continue
+            elif msg.get("experience"):
+                if msg.get("experience") == "transmission":
+                    route_list = msg.get("route")
+                    route_list.remove(int(msg.get("source")))
+
+                    if len(route_list) <= 1:
+                        msg["experience"] = "processing"
+                        e = Event(msg, None, 0)
+                        self.send_event(e)
+                    else:
+                        source_edge = route_list[0]
+                        dest = route_list[1]
+
+                        # find link
+                        for lnk in self.scenario_factory.get_edge_manager().get_link_list():
+                            lnk_status = lnk.get_link()
+                            set = [source_edge, dest]
+
+                            if sorted(set) == sorted(lnk_status):
+                                updated_link = lnk
+                                delay = lnk.get_delay()
+
+                                msg["delay"] = delay
+                                msg["link"] = updated_link
+                                msg["source"] = source_edge
+                                et = Event(msg, evt.get_task(), delay)
+
+                                self.send_event(et)
+                                break
+                    continue
+                else:
+                    # store experience
+                    source = int(msg["source"])
+
+                    edge_list = self.scenario_factory.get_edge_manager().get_node_list()
+                    oche = edge_list[source - 1]
+                    oche.get_policy().store_exp(msg.get("data"))
             elif msg.get("simulation"):
                 if msg.get("simulation") == "progress":
                     #
                     progress = int((self.clock * 100)/self.terminate_time)
+                    # calculate load_balance
+                    edge_list = self.scenario_factory.get_edge_manager().get_node_list()
+                    task_list = list()
+                    for edge in edge_list:
+                        exec_list = edge.get_exec_list()
+                        waiting_list = edge.get_waiting_list()
+                        task_list.append(len(exec_list) + len(waiting_list))
+
+                    data = [x ** 2 for x in task_list]
+                    if sum(data) != 0:
+                        load_balance = (sum(task_list) ** 2) / sum(data) / len(edge_list)
+                    else:
+                        load_balance = 1
+
+                    Log.get_instance().load_balance_record(load_balance)
 
                     if progress % 10 == 0:
                         print("Progress:", progress, end='')

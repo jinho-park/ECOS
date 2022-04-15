@@ -18,7 +18,7 @@ class EdgeManager:
         self.state = 1
         self.orchestrator = None
         self.waiting_task = list()
-        self.epoch = 1
+        # self.epoch = 1
 
     #minseon
     def get_node_list(self):
@@ -77,19 +77,7 @@ class EdgeManager:
     def receive_task_from_edge(self, event):
         # find edge
         msg = event.get_message()
-        task_list = list()
-
-        for edge in self.node_list:
-            task_num = len(edge.get_exec_list()) + len(edge.get_waiting_list())
-            task_list.append(task_num)
-
-        data = [x ** 2 for x in task_list]
-        if sum(data) != 0:
-            load_balance = (sum(task_list)**2) / sum(data)
-        else:
-            load_balance = 1
         task = event.get_task()
-        task.set_load_balance(load_balance)
 
         node = self.node_list[int(msg["detail"]["route"][0]) - 1]
         node.task_processing(task)
@@ -169,12 +157,11 @@ class EdgeManager:
                         break
 
         self.waiting_task = []
-        self.epoch += 1
+        # self.epoch += 1
 
-        if self.epoch % 10 == 0:
-            for node in self.node_list:
-                policy = node.get_policy()
-                policy.training()
+        # for node in self.node_list:
+        #     policy = node.get_policy()
+        #     policy.training()
 
     def get_network(self):
         return self.edge_network

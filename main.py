@@ -1,5 +1,7 @@
 import json
 import os
+import tensorflow as tf
+import numpy as np
 
 from ecos import Simulator
 from ecos import EdgeManager
@@ -34,7 +36,7 @@ def main():
 
     simul = Simulator.get_instance()
 
-    for episode in range(1):
+    for episode in range(200):
         for mobile_device in range(int(configure_data["min_num_of_mobile_device"]),
                                    int(configure_data["max_num_of_mobile_device"]),
                                    int(configure_data["mobile_device_counter"])):
@@ -60,4 +62,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-
+    # test()

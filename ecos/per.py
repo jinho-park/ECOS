@@ -45,7 +45,7 @@ class PER:
         sample_idxs, tree_idxs = [], []
         priorities = np.empty((num_samples, 1), dtype=np.float64)
 
-        segment = self.tree.total() / num_samples
+        segment = self.tree.total / num_samples
 
         for i in range(num_samples):
             a, b = segment * i, segment * (i + 1)
@@ -79,61 +79,57 @@ class PER:
             self.tree.update(data_idx, priority)
             self.max_priority = max(self.max_priority, priority)
 
+    def get_size(self):
+        return self.real_size
+
 
 class SumTree:
-    write = 0
+    def __init__(self, size):
+        self.nodes = [0] * (2 * size - 1)
+        self.data = [None] * size
 
-    def __init__(self, capacity):
-        self.capacity = capacity
-        self.tree = np.zeros(2 * capacity - 1)
-        self.data = np.zeros(capacity, dtype=object)
-        self.n_entries = 0
+        self.size = size
+        self.count = 0
+        self.real_size = 0
 
-    def _propagate(self, idx, change):
-        parent = (idx - 1) // 2
-
-        self.tree[parent] += change
-
-        if parent != 0:
-            self._propagate(parent, change)
-
-    def _retrieve(self, idx, s):
-        left = 2 * idx + 1
-        right = left + 1
-
-        if left >= len(self.tree):
-            return idx
-
-        if s <= self.tree[left]:
-            return self._retrieve(left, s)
-        else:
-            return self._retrieve(right, s - self.tree[left])
-
+    @property
     def total(self):
-        return self.tree[0]
+        return self.nodes[0]
 
-    def add(self, p, data):
-        idx = self.write + self.capacity - 1
+    def update(self, data_idx, value):
+        idx = data_idx + self.size - 1  # child index in tree array
+        change = value - self.nodes[idx]
 
-        self.data[self.write] = data
-        self.update(idx, p)
+        self.nodes[idx] = value
 
-        self.write += 1
+        parent = (idx - 1) // 2
+        while parent >= 0:
+            self.nodes[parent] += change
+            parent = (parent - 1) // 2
 
-        if self.write >= self.capacity:
-            self.write = 0
+    def add(self, value, data):
+        self.data[self.count] = data
+        self.update(self.count, value)
 
-        if self.n_entries < self.capacity:
-            self.n_entries += 1
+        self.count = (self.count + 1) % self.size
+        self.real_size = min(self.size, self.real_size + 1)
 
-    def update(self, idx, p):
-        change = p - self.tree[idx]
+    def get(self, cumsum):
+        assert cumsum <= self.total
 
-        self.tree[idx] = p
-        self._propagate(idx, change)
+        idx = 0
+        while 2 * idx + 1 < len(self.nodes):
+            left, right = 2*idx + 1, 2*idx + 2
 
-    def get(self, s):
-        idx = self._retrieve(0, s)
-        dataIdx = idx - self.capacity + 1
+            if cumsum <= self.nodes[left]:
+                idx = left
+            else:
+                idx = right
+                cumsum = cumsum - self.nodes[left]
 
-        return idx, self.tree[idx], self.data[dataIdx]
+        data_idx = idx - self.size + 1
+
+        return data_idx, self.nodes[idx], self.data[data_idx]
+
+    def __repr__(self):
+        return f"SumTree(nodes={self.nodes.__repr__()}, data={self.data.__repr__()})"

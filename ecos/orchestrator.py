@@ -9,6 +9,7 @@ from ecos.replaybuffer import ReplayBuffer
 from ecos.per import PER
 from ecos.custom_buffer import Custom_PER
 from ecos.simulator import Simulator
+from ecos.event import Event
 
 
 class Orchestrator:
@@ -25,13 +26,16 @@ class Orchestrator:
             self.loss_file = open(folder_path + "/loss_log_" + str(id) + ".txt", 'w')
             # create folder
             self.agent = Agent.remote(Simulator.get_instance().get_num_of_edge(), self.file_path)
-            self.state = np.zeros(6)
+            self.state = np.zeros(5)
             self.action = None
             self.reward = 0
+            self.td_error = 0
+            self.value = 0
             self.cumulative_reward = 0
             self.epoch = 1
-            self.replay = ReplayBuffer(20, Simulator.get_instance().get_num_of_edge())
+            self.replay = Custom_PER(17, Simulator.get_instance().get_num_of_edge())
             self.id = id
+            self.grad = 0
 
     def offloading_target(self, task, source):
         collaborationTarget = 0
@@ -78,18 +82,28 @@ class Orchestrator:
                 delay_list.append(delay)
 
             for edge in edge_list:
-                waiting_task_list.append(len(edge.get_waiting_list()) / 100)
+                waiting_task_list.append(len(edge.get_waiting_list()))
                 available_computing_resource.append(edge.CPU)
 
-            max_resource = max(available_computing_resource)
+            max_waiting_len = max(waiting_task_list)
+            waiting_task_list_ = [x/(max_waiting_len+1) for x in waiting_task_list]
+
+            # max_resource = max(available_computing_resource)
             resource_list = []
 
             for i in range(len(edge_list)):
-                resource_list.append(available_computing_resource[i] / max_resource)
+                exec_list = edge_list[i].get_exec_list()
+                require_list = []
+                for exe in exec_list:
+                    require_list.append(exe.get_input_size()/exe.get_task_deadline())
+                resource_list.append(sum(require_list) / available_computing_resource[i])
 
             state_ = [task.get_remain_size() / 1000] + [task.get_task_deadline() / 1000] + \
-                     resource_list + waiting_task_list + delay_list
+                     resource_list + waiting_task_list_ + delay_list
             state = np.array(state_, ndmin=2)
+
+            # edit
+            action = ray.get(self.agent.sample_action.remote(state))
 
             if self.action is not None:
                 if isinstance(self.replay, ReplayBuffer):
@@ -97,22 +111,19 @@ class Orchestrator:
                 elif isinstance(self.replay, PER):
                     self.replay.store(self.state, self.action, self.reward, state)
                 elif isinstance(self.replay, Custom_PER):
-                    self.replay.store(self.state, self.action, self.reward, state)
-                # need to add summary
+                    td_error, value = ray.get(self.agent.sample_value.remote(self.state, self.action, self.reward, state))
+                    self.replay.store(self.state, self.action, self.reward, state, td_error.numpy(), value.numpy())
 
-            # edit
-            action = ray.get(self.agent.sample_action.remote(state))
             self.action = np.array(action, ndmin=2)
             self.state = state
             action_sample = np.random.choice(Simulator.get_instance().get_num_of_edge(), p=np.squeeze(action))
+            # action_sample = np.argmax(action)
             collaborationTarget = action_sample + 1
 
             # estimate reward
             # processing time
-            requirement = task.get_input_size() / task.get_task_deadline()
-            processing_time = requirement / available_computing_resource[action_sample]
-            processing_time *= min(edge_list[action_sample].get_max_processing(),
-                                   len(edge_list[action_sample].get_waiting_list()))
+            processing_time = task.get_input_size() * 3 / available_computing_resource[action_sample]
+
             # transmission time
             network = edge_manager.get_network()
             route = network.get_path_by_dijkstra(source, collaborationTarget)
@@ -135,10 +146,12 @@ class Orchestrator:
             waiting_task_list = edge_list[action_sample].get_waiting_list()
             waiting_time = 0
 
-            for task in waiting_task_list:
-                waiting_time += task.get_input_size() / task.get_task_deadline()
+            for i in range(len(waiting_task_list)):
+                if i > len(waiting_task_list) - 3:
+                    break
+                waiting_time += waiting_task_list[i].get_input_size()
 
-            waiting_time /= (len(waiting_task_list) * available_computing_resource[action_sample])
+            waiting_time /= available_computing_resource[action_sample]
 
             # load_balancing
             task_list = list()
@@ -154,17 +167,21 @@ class Orchestrator:
                 task_list.append(num_task)
 
             data = [x ** 2 for x in task_list]
-            load_balance = (sum(task_list) ** 2) / sum(data)
+            load_balance = (sum(task_list) ** 2) / sum(data) / len(edge_list)
 
-            self.reward = (processing_time + transmission_time + waiting_time) * -10 + \
-                          load_balance
+            self.reward = (processing_time + transmission_time + waiting_time) * -1 + \
+                          load_balance*0.5
             self.epoch += 1
+            task.set_reward(self.reward)
 
             print("=======================")
             print("state:", state_)
             print("source:", source, " target:", collaborationTarget, "action:", self.action)
             print("reward:", self.reward, "processing:", processing_time,
-                  "transmission:", transmission_time, "waiting:", waiting_time)
+                  "transmission:", transmission_time, "waiting:", waiting_time, "load_balancing:", load_balance)
+
+            if self.epoch % 10 == 0:
+                self.training()
 
         elif self.policy == "A2C_TEST":
             available_computing_resource = []
@@ -194,24 +211,33 @@ class Orchestrator:
                 delay_list.append(delay)
 
             for edge in edge_list:
-                waiting_task_list.append(len(edge.get_waiting_list()) / 100)
+                waiting_task_list.append(len(edge.get_waiting_list()))
                 available_computing_resource.append(edge.CPU)
 
-            max_resource = max(available_computing_resource)
+            max_waiting_len = max(waiting_task_list)
+            waiting_task_list_ = [x / (max_waiting_len + 1) for x in waiting_task_list]
+
+            # max_resource = max(available_computing_resource)
             resource_list = []
 
             for i in range(len(edge_list)):
-                resource_list.append(available_computing_resource[i] / max_resource)
+                exec_list = edge_list[i].get_exec_list()
+                require_list = []
+                for exe in exec_list:
+                    require_list.append(exe.get_input_size() / exe.get_task_deadline())
+                resource_list.append(sum(require_list) / available_computing_resource[i])
 
             state_ = [task.get_remain_size() / 1000] + [task.get_task_deadline() / 1000] + \
-                     resource_list + waiting_task_list + delay_list
+                     resource_list + waiting_task_list_ + delay_list
             state = np.array(state_, ndmin=2)
+            # need to add summary
 
             # edit
             action = ray.get(self.agent.sample_action.remote(state))
             self.action = np.array(action, ndmin=2)
             self.state = state
-            action_sample = np.random.choice(Simulator.get_instance().get_num_of_edge(), p=np.squeeze(action))
+            # action_sample = np.random.choice(Simulator.get_instance().get_num_of_edge(), p=np.squeeze(action))
+            action_sample = np.argmax(action)
             collaborationTarget = action_sample + 1
 
         return collaborationTarget
@@ -221,16 +247,17 @@ class Orchestrator:
 
     def training(self):
         if self.training_enable and Simulator.get_instance().get_warmup_time() < Simulator.get_instance().get_clock():
-            print("**************" + str(self.epoch) + "***********")
             c_time = time.time()
             # for epc in range(self.epoch):
-            if self.replay.get_size() > 0:
-                current_state, actions, rewards, next_state = self.replay.fetch_sample(num_samples=32)
+            if self.replay.get_size() > 0 and self.epoch % 10 == 0:
+                print("**************" + str(self.epoch/10) + "***********")
+                current_state, actions, rewards, next_state, weight = self.replay.fetch_sample(num_samples=128)
 
-                critic1_loss, critic2_loss, actor_loss, alpha_loss = ray.get(self.agent.train.remote(current_state,
+                critic1_loss, critic2_loss, actor_loss, grad_value, alpha_loss = ray.get(self.agent.train.remote(current_state,
                                                                                                      actions,
                                                                                                      rewards,
-                                                                                                     next_state))
+                                                                                                     next_state,
+                                                                                                     weight=weight))
 
                 print("---------------------------")
                 print("source:", self.id, "training time:", time.time() - c_time)
@@ -239,9 +266,74 @@ class Orchestrator:
                 self.loss_file.write("actor_loss: " + str(actor_loss.numpy()) +
                                      " critic_loss1: " + str(critic1_loss.numpy()) +
                                      " critic_loss2: " + str(critic2_loss.numpy()) + "\n")
+                self.grad = grad_value
+
+                edge_manager = Simulator.get_instance().get_scenario_factory().get_edge_manager()
+                edge_list = edge_manager.get_node_list()
+                for edge in edge_list:
+                    policy = edge.get_policy()
+                    if self.id == policy.get_id():
+                        continue
+
+                    grad_ = policy.get_grad()
+                    # print("this grad:", self.grad, "target grad:", grad_)
+
+                    if self.grad == 0:
+                        percent = 0
+                    else:
+                        percent = (self.grad - grad_) / self.grad
+                    if percent >= 0:
+                        percent = percent * -1 + 1
+                    else:
+                        percent = percent - 1
+                    # print("source_grad:", self.grad, "target_grad:", grad_)
+                    current_states, actions, rewards, next_state, ranks = self.replay.get_sharing_data(percent + 0.5)
+
+                    if len(current_states) < 1:
+                        continue
+                    edge_link_list = edge_manager.get_link_list()
+                    route_list = edge_manager.get_network().get_path_by_dijkstra(self.id, policy.get_id())
+                    set = [self.id, route_list[1]]
+
+                    for link in edge_link_list:
+                        link_status = link.get_link()
+
+                        if sorted(set) == sorted(link_status):
+                            delay = link.get_delay()
+
+                            msg = {
+                                "experience": "transmission",
+                                "data": {
+                                    "current_state": current_states,
+                                    "action": actions,
+                                    "reward": rewards,
+                                    "next_state": next_state,
+                                    "rank": ranks
+                                },
+                                "route": route_list,
+                                "link": link,
+                                "delay": delay,
+                                "source": policy.get_id()
+                            }
+
+                            event = Event(msg, None, delay)
+                            Simulator.get_instance().send_event(event)
+
+                            break
+
                 self.agent.update_weights.remote()
 
     def shutdown(self):
         if self.training_enable:
             ray.shutdown(self.agent)
             self.loss_file.close()
+
+    def get_grad(self):
+        return self.grad
+
+    def get_id(self):
+        return self.id
+
+    def store_exp(self, list):
+        self.replay.replace(list["current_state"], list["action"], list["reward"],
+                            list["next_state"], list["rank"], len(list["current_state"]))

@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import os
+import math
 from ecos import a2c
 import ray
 
@@ -18,7 +19,7 @@ class Agent:
 
         self.file_path = file_path
         self.epoch_step = epoch_step
-        self.writer = tf.summary.create_file_writer('./results')
+        # self.writer = tf.summary.create_file_writer('./results')
 
         self.alpha = tf.Variable(0.0, dtype=tf.float32)
         self.target_entropy = -tf.constant(action_dim, dtype=tf.float32)
@@ -39,7 +40,20 @@ class Agent:
 
         return action_prob[0]
 
-    def update_q_network(self, current_states, actions, rewards, next_states):
+    def sample_value(self, current_state, action, reward, next_state):
+        current_state_ = np.array(current_state, ndmin=2)
+        action_ = np.array(action, ndmin=2)
+        reward_ = np.array(reward, ndmin=2)
+        next_state_ = np.array(next_state, ndmin=2)
+        q = self.q1.call(current_state_, action_)
+        action_prob = self.policy.call(next_state_)
+        q_target = self.target_q1.call(next_state_, action_prob)
+
+        td_error = reward_ + self.gamma * q_target - q
+
+        return td_error, q
+
+    def update_q_network(self, current_states, actions, rewards, next_states, weight=1):
         with tf.GradientTape() as tape1:
             q1 = self.q1.call(current_states, actions)
 
@@ -52,7 +66,7 @@ class Agent:
 
             y = tf.stop_gradient(rewards + self.gamma * min_q_target)
 
-            critic1_loss = tf.reduce_mean((q1 - y)**2)
+            critic1_loss = tf.reduce_mean((q1 - y)**2*weight)
 
         with tf.GradientTape() as tape2:
             q2 = self.q2.call(current_states, actions)
@@ -66,7 +80,7 @@ class Agent:
 
             y = tf.stop_gradient(rewards + self.gamma * min_q_target)
 
-            critic2_loss = tf.reduce_mean((q2 - y)**2)
+            critic2_loss = tf.reduce_mean((q2 - y)**2 * weight)
 
         grads1 = tape1.gradient(critic1_loss, self.q1.trainable_variables)
         self.critic_optimizer.apply_gradients(zip(grads1, self.q1.trainable_variables))
@@ -74,13 +88,12 @@ class Agent:
         grads2 = tape2.gradient(critic2_loss, self.q2.trainable_variables)
         self.critic2_optimizer.apply_gradients(zip(grads2, self.q2.trainable_variables))
 
-        with self.writer.as_default():
-            for grad, var in zip(grads1, self.q1.trainable_variables):
-                tf.summary.histogram(f"grad-{var.name}", grad, self.epoch_step)
-                tf.summary.histogram(f"var-{var.name}", var, self.epoch_step)
-            for grad, var in zip(grads2, self.q2.trainable_variables):
-                tf.summary.histogram(f"grad-{var.name}", grad, self.epoch_step)
-                tf.summary.histogram(f"var-{var.name}", var, self.epoch_step)
+        for grad, var in zip(grads1, self.q1.trainable_variables):
+            tf.summary.histogram(f"grad-{var.name}", grad, self.epoch_step)
+            tf.summary.histogram(f"var-{var.name}", var, self.epoch_step)
+        for grad, var in zip(grads2, self.q2.trainable_variables):
+            tf.summary.histogram(f"grad-{var.name}", grad, self.epoch_step)
+            tf.summary.histogram(f"var-{var.name}", var, self.epoch_step)
 
         return critic1_loss, critic2_loss
 
@@ -93,17 +106,25 @@ class Agent:
 
             min_q = tf.minimum(q1, q2)
 
-            actor_loss = -tf.reduce_mean(min_q)
+            reduce_mean = tf.reduce_mean(min_q)
+
+            actor_loss = -reduce_mean
 
         grads = tape.gradient(actor_loss, self.policy.trainable_variables)
         self.actor_optimizer.apply_gradients(zip(grads, self.policy.trainable_variables))
 
-        with self.writer.as_default():
-            for grad, var in zip(grads, self.q1.trainable_variables):
-                tf.summary.histogram(f"grad-{var.name}", grad, self.epoch_step)
-                tf.summary.histogram(f"var-{var.name}", var, self.epoch_step)
+        grads_value = 0
 
-        return actor_loss
+        for grad, var in zip(grads, self.q1.trainable_variables):
+            tf.summary.histogram(f"grad-{var.name}", grad, self.epoch_step)
+            tf.summary.histogram(f"var-{var.name}", var, self.epoch_step)
+
+        assert math.isnan(actor_loss.numpy()) is False, print("reduce_mean:", reduce_mean,
+                                                              "q1:", q1, "q2:", q2,
+                                                              "state:", current_states)
+        assert math.isnan(grads_value) is False, print("grad is nan", grads[-1])
+
+        return actor_loss, grads_value
 
     def update_alpha(self, current_states):
         with tf.GradientTape() as tape:
@@ -113,22 +134,21 @@ class Agent:
         grads = tape.gradient(alpha_loss, variables)
         self.alpha_optimizer.apply_gradients(zip(grads, variables))
 
-        with self.writer.as_default():
-            for grad, var in zip(grads, self.q1.trainable_variables):
-                tf.summary.histogram(f"grad-{var.name}", grad, self.epoch_step)
-                tf.summary.histogram(f"var-{var.name}", var, self.epoch_step)
+        for grad, var in zip(grads, self.q1.trainable_variables):
+            tf.summary.histogram(f"grad-{var.name}", grad, self.epoch_step)
+            tf.summary.histogram(f"var-{var.name}", var, self.epoch_step)
 
         return alpha_loss
 
-    def train(self, current_states, actions, rewards, next_states):
+    def train(self, current_states, actions, rewards, next_states, weight=None):
         critic1_loss, critic2_loss = self.update_q_network(current_states, actions, rewards,
-                                                           next_states)
+                                                           next_states, weight=weight)
 
-        actor_loss = self.update_policy_network(current_states)
+        actor_loss, grad_value = self.update_policy_network(current_states)
 
         alpha_loss = self.update_alpha(current_states)
 
-        return critic1_loss, critic2_loss, actor_loss, alpha_loss
+        return critic1_loss, critic2_loss, actor_loss, grad_value, alpha_loss
 
     def update_weights(self):
         for theta_target, theta in zip(self.target_q1.trainable_variables, self.q1.trainable_variables):
